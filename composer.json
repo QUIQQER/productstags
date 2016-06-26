@@ -1,0 +1,31 @@
+{
+  "name": "quiqqer/productstags",
+  "type": "quiqqer-module",
+  "description": "",
+  "version": "dev-master",
+  "license": "",
+  "authors": [
+    {
+      "name": "Henning Leutz",
+      "email": "leutz@pcsg.de",
+      "homepage": "http://www.pcsg.de",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "email": "support@pcsg.de",
+    "url": "http://www.pcsg.de"
+  },
+  "require": {
+    "php": ">=5.3",
+    "quiqqer/quiqqer": "*@dev",
+    "quiqqer/bricks": "*@dev",
+    "quiqqer/products": "*@dev",
+    "quiqqer/tags": "dev-dev"
+  },
+  "autoload": {
+    "psr-4": {
+      "QUI\\ERP\\Tags\\": "src/QUI/ERP/Tags/"
+    }
+  }
+}
