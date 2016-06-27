@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <locales>
 
-    <groups name="quiqqer/products" datatype="php,js">
+    <groups name="quiqqer/productstags" datatype="php,js">
         <locale name="package.title">
             <de><![CDATA[QUIQQER - Shop - Produkttags]]></de>
             <en><![CDATA[QUIQQER - Shop - Producttags]]></en>
