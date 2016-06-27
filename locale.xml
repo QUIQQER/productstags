@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<locales>
+
+    <groups name="quiqqer/products" datatype="php,js">
+        <locale name="package.title">
+            <de><![CDATA[QUIQQER - Shop - Produkttags]]></de>
+            <en><![CDATA[QUIQQER - Shop - Producttags]]></en>
+        </locale>
+        <locale name="field.tag">
+            <de><![CDATA[Tags]]></de>
+            <en><![CDATA[Tags]]></en>
+        </locale>
+
+    </groups>
+
+</locales>

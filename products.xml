@@ -1,0 +1,9 @@
+<quiqqer>
+    <products>
+        <fields>
+            <field src="\QUI\ERP\Tags\Field" category="1" name="productstags.tags">
+                <locale group="quiqqer/productstags" var="field.tag"/>
+            </field>
+        </fields>
+    </products>
+</quiqqer>
