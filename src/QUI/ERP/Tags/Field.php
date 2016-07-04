@@ -12,14 +12,17 @@ use QUI\ERP\Products;
  * Class Field
  *
  * @package QUI\ERP\Tags
+ * @author www.pcsg.de (Patrick Müller)
  */
 class Field extends Products\Field\Field
 {
+    const TYPE = 'productstags.tags';
+
     /**
      * Cleanup the value, the value is valid now
      *
      * @param mixed $value
-     * @return string
+     * @return array
      */
     public function cleanup($value)
     {
@@ -68,7 +71,7 @@ class Field extends Products\Field\Field
      * Check the value
      * is the value valid for the field type?
      *
-     * @param integer $value
+     * @param mixed $value
      * @throws \QUI\ERP\Products\Field\Exception
      */
     public function validate($value)
@@ -106,6 +109,16 @@ class Field extends Products\Field\Field
                 ));
             }
         }
+    }
+
+    /**
+     * Get all tags that are assigned to this field
+     *
+     * @return array
+     */
+    public function getTags()
+    {
+        return $this->getValue();
     }
 
     /**
