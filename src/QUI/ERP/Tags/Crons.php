@@ -110,17 +110,23 @@ class Crons
         // insert tags to products
         foreach ($tagProducts as $lang => $langTags) {
             foreach ($langTags as $tag => $productIds) {
+                $LangProject      = QUI::getProject($Project->getName(), $lang);
+                $tblTags2Products = QUI::getDBProjectTableName(self::TBL_TAGS_2_PRODUCTS, $LangProject);
+
+                // delete tag entry if no products are assigned
                 if (empty($productIds)) {
-                    $data['productIds'] = null;
+                    $DataBase->delete(
+                        $tblTags2Products,
+                        array(
+                            'tag' => $tag
+                        )
+                    );
                 }
 
                 $data = array(
                     'tag'        => $tag,
                     'productIds' => ',' . implode(',', $productIds) . ','
                 );
-
-                $LangProject      = QUI::getProject($Project->getName(), $lang);
-                $tblTags2Products = QUI::getDBProjectTableName(self::TBL_TAGS_2_PRODUCTS, $LangProject);
 
                 $DataBase->insert($tblTags2Products, $data);
             }
