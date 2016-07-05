@@ -57,7 +57,7 @@ class Field extends Products\Field\Field
 
             foreach ($tags as $tag) {
                 if ($TagManager->existsTag($tag)) {
-                    $tagresult[] = $tags;
+                    $tagresult[] = $tag;
                 }
             }
 
@@ -118,7 +118,15 @@ class Field extends Products\Field\Field
      */
     public function getTags()
     {
-        return $this->getValue();
+        $val = $this->getValue();
+
+        if (is_array($val)) {
+            return $val;
+        }
+
+        $val = trim($val, ',');
+
+        return explode(',', $val);
     }
 
     /**
