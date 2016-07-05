@@ -61,7 +61,7 @@ class Field extends Products\Field\Field
                 }
             }
 
-            $result[$lang] = $value[$lang];
+            $result[$lang] = $tagresult;
         }
 
         return $result;
