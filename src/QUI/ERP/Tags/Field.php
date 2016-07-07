@@ -19,6 +19,13 @@ class Field extends Products\Field\Field
     const TYPE = 'productstags.tags';
 
     /**
+     * Tag Manager instanced by language
+     *
+     * @var array
+     */
+    protected $tagManagers = array();
+
+    /**
      * Cleanup the value, the value is valid now
      *
      * @param mixed $value
@@ -51,8 +58,7 @@ class Field extends Products\Field\Field
                 continue;
             }
 
-            $Project    = QUI::getProjectManager()->getProject($Project->getName(), $lang);
-            $TagManager = new QUI\Tags\Manager($Project);
+            $TagManager = $this->getTagManager($lang);
             $tagresult  = array();
 
             foreach ($tags as $tag) {
@@ -112,6 +118,73 @@ class Field extends Products\Field\Field
     }
 
     /**
+     * Adds a tag to this field
+     *
+     * @param string $tag
+     * @param string $lang
+     * @return bool - success
+     */
+    public function addTag($tag, $lang)
+    {
+        $tags = $this->getTags();
+
+        if (!isset($tags[$lang])) {
+            return false;
+        }
+
+        $tags[$lang][] = $tag;
+        $this->setValue($tags);
+
+        return true;
+    }
+
+    /**
+     * Add multiple tags to this field
+     *
+     * @param array $tags
+     * @param string $lang
+     * @return bool - success
+     */
+    public function addTags($tags, $lang)
+    {
+        $fieldTags = $this->getTags();
+
+        if (!isset($fieldTags[$lang])) {
+            return false;
+        }
+
+        $fieldTags[$lang] = array_merge($fieldTags[$lang], $tags);
+        $this->setValue($fieldTags);
+
+        return true;
+    }
+
+    /**
+     * Removes a tag from this field
+     *
+     * @param string $tag
+     * @param string $lang
+     * @return bool - success
+     */
+    public function removeTag($tag, $lang)
+    {
+        $tags = $this->getTags();
+
+        if (!isset($tags[$lang])) {
+            return false;
+        }
+
+        if (!in_array($tag, $tags[$lang])) {
+            return false;
+        }
+
+        unset($tags[$lang][$tag]);
+        $this->setValue($tags);
+
+        return true;
+    }
+
+    /**
      * Get all tags that are assigned to this field
      *
      * @return array
@@ -134,7 +207,7 @@ class Field extends Products\Field\Field
      */
     public function getJavaScriptControl()
     {
-        return '';
+        return 'package/quiqqer/productstags/bin/controls/FieldSettings';
     }
 
     /**
@@ -142,6 +215,28 @@ class Field extends Products\Field\Field
      */
     public function getJavaScriptSettings()
     {
-        return 'package/quiqqer/productstags/bin/controls/FieldSettings';
+        return 'package/quiqqer/productstags/bin/controls/TagSettings';
+    }
+
+    /**
+     * Get Tag Manager for standard project for specific language
+     *
+     * @param string $lang
+     * @return QUI\Tags\Manager
+     * @throws QUI\Exception
+     */
+    protected function getTagManager($lang)
+    {
+        if (isset($this->tagManagers[$lang])) {
+            return $this->tagManagers[$lang];
+        }
+
+        $Project = QUI::getProjectManager()->getStandard();
+        $Project = QUI::getProjectManager()->getProject($Project->getName(), $lang);
+
+        $TagManager               = new QUI\Tags\Manager($Project);
+        $this->tagManagers[$lang] = $TagManager;
+
+        return $TagManager;
     }
 }

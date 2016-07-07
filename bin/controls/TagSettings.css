@@ -1,0 +1,68 @@
+.quiqqer-products-tags-entry-create .field-container {
+    margin-bottom: 10px;
+}
+
+.quiqqer-products-tags-entry-create .field-tags-title input {
+    max-width: 300px;
+    width: 100%;
+}
+
+.quiqqer-products-tags-entry-create .field-container-item:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 180px !important;
+}
+
+.quiqqer-products-tags-entry-create .field-tags-price input {
+    float: left;
+    max-width: 300px;
+    width: 66.666%;
+}
+
+.quiqqer-products-tags-entry-create .field-tags-price select {
+    float: left;
+    margin-left: 5px;
+    max-width: 300px;
+    width: calc(33% - 5px);
+}
+
+.quiqqer-products-tags-settings-title,
+.quiqqer-products-tags-settings-insertTags {
+    clear: both;
+    float: left;
+    width: 100%
+}
+
+.quiqqer-products-tags-settings-title {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 10px;
+}
+
+.quiqqer-products-tags-settings-insertTags {
+    border-bottom: 1px solid rgba(147, 128, 108, 0.25);
+    padding: 10px;
+}
+
+.quiqqer-products-tags-settings-insertTags label {
+    cursor: pointer;
+    width: 100% !important;
+}
+
+.quiqqer-products-tags-settings-text {
+    float: left;
+    line-height: 12px;
+    padding: 10px;
+    width: 200px;
+}
+
+.quiqqer-products-tags-settings-insertTags input {
+    float: left;
+}
+
+.quiqqer-products-tags-settings-input {
+    float: left;
+    height: 32px;
+    margin: 0;
+    width: calc(100% - 200px);
+}

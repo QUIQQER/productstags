@@ -22,4 +22,15 @@
 
     </groups>
 
+    <groups name="quiqqer/productstags" datatype="js">
+        <locale name="tagsettings.template.title">
+            <de><![CDATA[Tag-Einstellungen]]></de>
+            <en><![CDATA[Tag Settings]]></en>
+        </locale>
+        <locale name="tagsettings.template.insertTags">
+            <de><![CDATA[Alle Produkt-Tags diesem Feld automatisch hinzufügen]]></de>
+            <en><![CDATA[Add all product tags automatically to this field]]></en>
+        </locale>
+    </groups>
+
 </locales>
