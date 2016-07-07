@@ -21,8 +21,6 @@ class ProductEvents
      */
     public static function onProductSave($Product)
     {
-        ini_set('display_errors', 1); // @todo entfernen
-
         $tagFields   = $Product->getFieldsByType(Field::TYPE);
         $pId         = $Product->getId();
         $productTags = array();
