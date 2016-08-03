@@ -27,7 +27,7 @@ class ProductEvents
 
         /** @var Field $Field */
         foreach ($tagFields as $Field) {
-            $tags = $Field->getTags();
+            $tags = $Field->getTagList();
 
             foreach ($tags as $lang => $langTags) {
                 if (!isset($productTags[$lang])) {

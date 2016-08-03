@@ -58,7 +58,7 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
 
             Elm.set({
                 html: '<div class="language-select"></div>' +
-                      '<div class="tag-container"></div>'
+                '<div class="tag-container"></div>'
             });
 
             var TagContainer  = Elm.getElement('.tag-container');
@@ -86,9 +86,10 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
             );
 
             Project.getConfig().then(function (config) {
+                var i, len;
                 var languages = config.langs.split(',');
 
-                for (var i = 0, len = languages.length; i < len; i++) {
+                for (i = 0, len = languages.length; i < len; i++) {
                     this.$Select.appendChild(
                         QUILocale.get('quiqqer/system', 'language.' + languages[i]),
                         languages[i],
@@ -108,6 +109,14 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
                 this.$Tags = new Tags({
                     project    : QUIQQER_PROJECT.name,
                     projectLang: current,
+                    events     : {
+                        onAdd   : function (Control, tag) {
+                            self.$onAddTag(tag);
+                        },
+                        onRemove: function (Control, tag) {
+                            self.$onRemoveTag(tag);
+                        }
+                    },
                     styles     : {
                         padding: 0,
                         height : '100%',
@@ -125,15 +134,68 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
                     value = this.getValue();
 
                     if (current in value) {
+                        var tags            = value[current];
+                        var tagsToContainer = [];
+
+                        for (i = 0, len = tags.length; i < len; i++) {
+                            tagsToContainer.push(tags[i].tag);
+                        }
+
                         this.$Tags.setAttribute('projectLang', current);
                         this.$Tags.clear();
-                        this.$Tags.addTags(value[current]);
+                        this.$Tags.addTags(tagsToContainer);
                     }
 
                 } catch (e) {
                 }
 
             }.bind(this));
+        },
+
+        /**
+         * event: on add tag from tag container
+         *
+         * @param {string} tag
+         */
+        $onAddTag: function (tag) {
+            var current = this.getAttribute('current');
+            var tags    = this.getAttribute('value');
+
+            if (!(current in tags)) {
+                return;
+            }
+
+            tags[current].push({
+                tag      : tag,
+                generator: 'user'
+            });
+
+            this.setAttribute('value', tags);
+        },
+
+        /**
+         * event: on remove tag from tag container
+         *
+         * @param {string} tag
+         */
+        $onRemoveTag: function (tag) {
+            var current = this.getAttribute('current');
+            var tags    = this.getAttribute('value');
+
+            if (!(current in tags)) {
+                return;
+            }
+
+            var langTags = tags[current];
+
+            for (var i = 0, len = langTags.length; i < len; i++) {
+                if (langTags[i].tag == tag) {
+                    tags[current].splice(i, 1);
+                    break;
+                }
+            }
+
+            this.setAttribute('value', tags);
         },
 
         /**
@@ -146,19 +208,24 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
                 return;
             }
 
-            var value   = this.getValue();
-            var current = this.getAttribute('current');
-
-            value[current] = this.$Tags.getTags();
-
-            this.setAttribute('value', value);
             this.setAttribute('current', lang);
 
-            if (lang in value) {
-                this.$Tags.setAttribute('projectLang', lang);
-                this.$Tags.clear();
-                this.$Tags.addTags(value[lang]);
+            var tags   = this.getValue();
+
+            if (!(lang in tags)) {
+                return;
             }
+
+            var langTags = tags[lang];
+            var tagsToContainer = [];
+
+            for (var i = 0, len = langTags.length; i < len; i++) {
+                tagsToContainer.push(langTags[i].tag);
+            }
+
+            this.$Tags.setAttribute('projectLang', lang);
+            this.$Tags.clear();
+            this.$Tags.addTags(tagsToContainer);
         },
 
         /**
@@ -179,7 +246,6 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
          */
         save: function () {
             this.$changeLanguage(this.getAttribute('current'));
-
             return JSON.encode(this.getValue());
         }
     });

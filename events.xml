@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <events>
     <event on="onQuiqqerProductsProductSave" fire="\QUI\ERP\Tags\ProductEvents::onProductSave"/>
+    <event on="onPackageSetup" fire="\QUI\ERP\Tags\Events::onPackageSetup"/>
 </events>
