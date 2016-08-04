@@ -282,6 +282,10 @@ class Field extends Products\Field\Field
     {
         $val = $this->getValue();
 
+        if (empty($val)) {
+            $val = array();
+        }
+
         if (!is_array($val)) {
             $val = json_decode($val, true);
         }
@@ -316,6 +320,10 @@ class Field extends Products\Field\Field
     public function getTagList($generator = null)
     {
         $val = $this->getValue();
+
+        if (empty($val)) {
+            $val = array();
+        }
 
         if (!is_array($val)) {
             $val = json_decode($val, true);
