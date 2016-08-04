@@ -101,6 +101,18 @@ class ProductEvents
                     'id' => $pId
                 )
             );
+
+            // upate product cache table with tags
+            $DB->update(
+                Products\Utils\Tables::getProductCacheTableName(),
+                array(
+                    'tags' => ',' . implode(',', $langTags) . ','
+                ),
+                array(
+                    'id'   => $Product->getId(),
+                    'lang' => $lang
+                )
+            );
         }
 
         // update tags to products
