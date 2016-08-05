@@ -10,7 +10,7 @@
         </description>
     </cron>
 
-    <cron exec="\QUI\ERP\Products\Crons::generateProductAttributeListTags">
+    <cron exec="\QUI\ERP\Tags\Crons::generateProductAttributeListTags">
         <title>
             <locale group="quiqqer/productstags" var="cron.generateProductAttributeListTags.title" />
         </title>
