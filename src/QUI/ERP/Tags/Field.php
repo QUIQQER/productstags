@@ -155,7 +155,8 @@ class Field extends Products\Field\Field
      *
      * @param string $tag
      * @param string $lang
-     * @param string $generator (optional) - the entitiy who created the tag [default: "user"]; can be package name for example
+     * @param string $generator (optional) - the entitiy who created the tag [default: "user"];
+     *                                       can be package name for example
      * @return bool - success
      */
     public function addTag($tag, $lang, $generator = 'user')
@@ -181,7 +182,8 @@ class Field extends Products\Field\Field
      *
      * @param array $tags
      * @param string $lang
-     * @param string $generator (optional) - the entitiy who created the tags [default: "user"]; can be package name for example
+     * @param string $generator (optional) - the entitiy who created the tags [default: "user"];
+     *                                       can be package name for example
      * @return bool - success
      */
     public function addTags($tags, $lang, $generator = 'user')

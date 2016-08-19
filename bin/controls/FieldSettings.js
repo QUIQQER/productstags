@@ -4,6 +4,10 @@
  *
  * @require qui/QUI
  * @require qui/controls/Control
+ * @require qui/controls/buttons/Select
+ * @require Locale
+ * @require Projects
+ * @require package/quiqqer/tags/bin/TagContainer
  */
 define('package/quiqqer/productstags/bin/controls/FieldSettings', [
 
@@ -12,7 +16,7 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
     'qui/controls/buttons/Select',
     'Locale',
     'Projects',
-    'package/quiqqer/tags/bin/TagContainer'
+    'package/quiqqer/tags/bin/tags/Select'
 
 ], function (QUI, QUIControl, QUISelect, QUILocale, Projects, Tags) {
     "use strict";
@@ -58,7 +62,7 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
 
             Elm.set({
                 html: '<div class="language-select"></div>' +
-                '<div class="tag-container"></div>'
+                      '<div class="tag-container"></div>'
             });
 
             var TagContainer  = Elm.getElement('.tag-container');
@@ -107,7 +111,7 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
                 });
 
                 this.$Tags = new Tags({
-                    project    : QUIQQER_PROJECT.name,
+                    projectName: QUIQQER_PROJECT.name,
                     projectLang: current,
                     events     : {
                         onAdd   : function (Control, tag) {
@@ -208,18 +212,47 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
                 return;
             }
 
-            this.setAttribute('current', lang);
+            // keep current tags
+            var i, len;
+            var current   = this.getAttribute('current'),
+                tags      = this.getAttribute('value'),
+                tagvalues = this.$Tags.getValue().split(',');
 
-            var tags   = this.getValue();
+            if (typeof tags[current] === 'undefined') {
+                tags[current] = [];
+            }
+
+            var isInTags = function (tag, tags) {
+                for (var i = 0, len = tags.length; i < len; i++) {
+                    if (tags[i].tag == tag) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            for (i = 0, len = tagvalues.length; i < len; i++) {
+                if (!isInTags(tagvalues[i], tags[current])) {
+                    tags[current].push({
+                        tag      : tagvalues[i],
+                        generator: 'user'
+                    });
+                }
+            }
+
+            this.setAttribute('value', tags);
+
+            // change language
+            this.setAttribute('current', lang);
 
             if (!(lang in tags)) {
                 return;
             }
 
-            var langTags = tags[lang];
+            var langTags        = tags[lang];
             var tagsToContainer = [];
 
-            for (var i = 0, len = langTags.length; i < len; i++) {
+            for (i = 0, len = langTags.length; i < len; i++) {
                 tagsToContainer.push(langTags[i].tag);
             }
 
