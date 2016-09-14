@@ -19,9 +19,11 @@ class Events
     /**
      * @param QUI\Package\Package $Package
      */
-    public static function onPackageSetup($Package)
+    public static function onPackageSetup(QUI\Package\Package $Package)
     {
-        self::createTagStandardField();
+        if ($Package->getName() === 'quiqqer/productstags') {
+            self::createTagStandardField();
+        }
     }
 
     /**
