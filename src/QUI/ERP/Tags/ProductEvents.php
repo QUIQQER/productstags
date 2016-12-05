@@ -24,6 +24,8 @@ class ProductEvents
         $tagFields   = $Product->getFieldsByType(Field::TYPE);
         $pId         = $Product->getId();
         $productTags = array();
+        $Project     = QUI::getProjectManager()->getStandard();
+        $DB          = QUI::getDataBase();
 
         /** @var Field $Field */
         foreach ($tagFields as $Field) {
@@ -34,13 +36,54 @@ class ProductEvents
                     $productTags[$lang] = array();
                 }
 
+                /****** TEMPORARY PATCH START *******/
+                foreach ($langTags as $k => $tag) {
+                    $result = $DB->fetchSQL(
+                        'SELECT COUNT(*) FROM ' .
+                        QUI::getDBProjectTableName('tags', $Project) .
+                        ' WHERE tag = BINARY \'' . $tag . '\''
+                    );
+
+                    if (current(current($result)) == 0) {
+                        unset($langTags[$k]);
+
+                        $tag = QUI\Tags\Manager::clearTagName($tag);
+
+                        if (!in_array($tag, $langTags)) {
+                            $langTags[] = $tag;
+                        }
+                    }
+                }
+                /****** TEMPORARY PATCH END *******/
+
                 $productTags[$lang] = array_merge($productTags[$lang], $langTags);
             }
         }
 
+        /****** TEMPORARY PATCH START *******/
+        $setToProductTags = array();
+
+        foreach ($productTags as $lang => $tags) {
+            if (!isset($setToProductTags[$lang])) {
+                $setToProductTags[$lang] = array();
+            }
+
+            foreach ($tags as $tag) {
+                $setToProductTags[$lang][] = array(
+                    'tag'       => $tag,
+                    'generator' => 'user'
+                );
+            }
+        }
+
+        foreach ($tagFields as $Field) {
+            $Field->setValue($setToProductTags);
+        }
+
+        $Product->save();
+        /****** TEMPORARY PATCH END *******/
+
         // update products to tags
-        $Project = QUI::getProjectManager()->getStandard();
-        $DB      = QUI::getDataBase();
 
         foreach ($productTags as $lang => $langTags) {
             $LangProject      = QUI::getProject($Project->getName(), $lang);
@@ -87,20 +130,18 @@ class ProductEvents
                         'tags' => ',' . implode(',', $langTags) . ','
                     )
                 );
-
-                continue;
+            } else {
+                // if products did have tags previously and now does too -> update
+                $DB->update(
+                    $tblProducts2Tags,
+                    array(
+                        'tags' => ',' . implode(',', $langTags) . ','
+                    ),
+                    array(
+                        'id' => $pId
+                    )
+                );
             }
-
-            // if products did have tags previously and now does too -> update
-            $DB->update(
-                $tblProducts2Tags,
-                array(
-                    'tags' => ',' . implode(',', $langTags) . ','
-                ),
-                array(
-                    'id' => $pId
-                )
-            );
 
             // upate product cache table with tags
             $DB->update(

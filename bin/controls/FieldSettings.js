@@ -62,7 +62,7 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
 
             Elm.set({
                 html: '<div class="language-select"></div>' +
-                      '<div class="tag-container"></div>'
+                '<div class="tag-container"></div>'
             });
 
             var TagContainer  = Elm.getElement('.tag-container');
@@ -113,14 +113,6 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
                 this.$Tags = new Tags({
                     projectName: QUIQQER_PROJECT.name,
                     projectLang: current,
-                    events     : {
-                        onAdd   : function (Control, tag) {
-                            self.$onAddTag(tag);
-                        },
-                        onRemove: function (Control, tag) {
-                            self.$onRemoveTag(tag);
-                        }
-                    },
                     styles     : {
                         padding: 0,
                         height : '100%',
@@ -157,52 +149,6 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
         },
 
         /**
-         * event: on add tag from tag container
-         *
-         * @param {string} tag
-         */
-        $onAddTag: function (tag) {
-            var current = this.getAttribute('current');
-            var tags    = this.getAttribute('value');
-
-            if (!(current in tags)) {
-                return;
-            }
-
-            tags[current].push({
-                tag      : tag,
-                generator: 'user'
-            });
-
-            this.setAttribute('value', tags);
-        },
-
-        /**
-         * event: on remove tag from tag container
-         *
-         * @param {string} tag
-         */
-        $onRemoveTag: function (tag) {
-            var current = this.getAttribute('current');
-            var tags    = this.getAttribute('value');
-
-            if (!(current in tags)) {
-                return;
-            }
-
-            var langTags = tags[current];
-
-            for (var i = 0, len = langTags.length; i < len; i++) {
-                if (langTags[i].tag == tag) {
-                    tags[current].splice(i, 1);
-                    break;
-                }
-            }
-
-            this.setAttribute('value', tags);
-        },
-
-        /**
          * Change language
          *
          * @param {String} lang
@@ -218,7 +164,11 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
                 tags      = this.getAttribute('value'),
                 tagvalues = this.$Tags.getValue().split(',');
 
-            if (typeof tags[current] === 'undefined') {
+            if (!tags) {
+                return;
+            }
+
+            if (!(current in tags)) {
                 tags[current] = [];
             }
 

@@ -57,6 +57,10 @@ class Crons
 
         foreach ($productIds as $productId) {
             $Product   = Products::getProduct($productId);
+
+            ProductEvents::onProductSave($Product);
+            continue;
+
             $tagFields = $Product->getFieldsByType(Field::TYPE);
 
             if (empty($tagFields)) {
@@ -114,6 +118,8 @@ class Crons
                 $DataBase->insert($tblProducts2Tags, $data);
             }
         }
+
+        return;
 
         // insert tags to products
         foreach ($tagProducts as $lang => $langTags) {
