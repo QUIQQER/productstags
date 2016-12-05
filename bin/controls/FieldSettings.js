@@ -117,6 +117,34 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
                         padding: 0,
                         height : '100%',
                         width  : '100%'
+                    },
+                    events     : {
+                        onChange: function (Control, tag) {
+                            var tags      = self.getAttribute('tags');
+                            var current   = self.getAttribute('current'),
+                                tagvalues = self.$Tags.getValue().split(',');
+
+                            if (!tags) {
+                                tags = {};
+                            }
+
+                            if (!tagvalues) {
+                                return;
+                            }
+
+                            if (!(current in tags)) {
+                                tags[current] = [];
+                            }
+
+                            for (var i = 0, len = tagvalues.length; i < len; i++) {
+                                tags[current].push({
+                                    tag      : tagvalues[i],
+                                    generator: 'user'
+                                });
+                            }
+
+                            self.setAttribute('value', tags);
+                        }
                     }
                 }).inject(TagContainer);
 
@@ -228,7 +256,7 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
          * @return {String}
          */
         save: function () {
-            this.$changeLanguage(this.getAttribute('current'));
+            //this.$changeLanguage(this.getAttribute('current'));
             return JSON.encode(this.getValue());
         }
     });
