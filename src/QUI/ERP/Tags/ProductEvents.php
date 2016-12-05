@@ -36,52 +36,52 @@ class ProductEvents
                     $productTags[$lang] = array();
                 }
 
-                /****** TEMPORARY PATCH START *******/
-                foreach ($langTags as $k => $tag) {
-                    $result = $DB->fetchSQL(
-                        'SELECT COUNT(*) FROM ' .
-                        QUI::getDBProjectTableName('tags', $Project) .
-                        ' WHERE tag = BINARY \'' . $tag . '\''
-                    );
-
-                    if (current(current($result)) == 0) {
-                        unset($langTags[$k]);
-
-                        $tag = QUI\Tags\Manager::clearTagName($tag);
-
-                        if (!in_array($tag, $langTags)) {
-                            $langTags[] = $tag;
-                        }
-                    }
-                }
-                /****** TEMPORARY PATCH END *******/
+//                /****** TEMPORARY PATCH START *******/
+//                foreach ($langTags as $k => $tag) {
+//                    $result = $DB->fetchSQL(
+//                        'SELECT COUNT(*) FROM ' .
+//                        QUI::getDBProjectTableName('tags', $Project) .
+//                        ' WHERE tag = BINARY \'' . $tag . '\''
+//                    );
+//
+//                    if (current(current($result)) == 0) {
+//                        unset($langTags[$k]);
+//
+//                        $tag = QUI\Tags\Manager::clearTagName($tag);
+//
+//                        if (!in_array($tag, $langTags)) {
+//                            $langTags[] = $tag;
+//                        }
+//                    }
+//                }
+//                /****** TEMPORARY PATCH END *******/
 
                 $productTags[$lang] = array_merge($productTags[$lang], $langTags);
             }
         }
 
-        /****** TEMPORARY PATCH START *******/
-        $setToProductTags = array();
-
-        foreach ($productTags as $lang => $tags) {
-            if (!isset($setToProductTags[$lang])) {
-                $setToProductTags[$lang] = array();
-            }
-
-            foreach ($tags as $tag) {
-                $setToProductTags[$lang][] = array(
-                    'tag'       => $tag,
-                    'generator' => 'user'
-                );
-            }
-        }
-
-        foreach ($tagFields as $Field) {
-            $Field->setValue($setToProductTags);
-        }
-
-        $Product->save();
-        /****** TEMPORARY PATCH END *******/
+//        /****** TEMPORARY PATCH START *******/
+//        $setToProductTags = array();
+//
+//        foreach ($productTags as $lang => $tags) {
+//            if (!isset($setToProductTags[$lang])) {
+//                $setToProductTags[$lang] = array();
+//            }
+//
+//            foreach ($tags as $tag) {
+//                $setToProductTags[$lang][] = array(
+//                    'tag'       => $tag,
+//                    'generator' => 'user'
+//                );
+//            }
+//        }
+//
+//        foreach ($tagFields as $Field) {
+//            $Field->setValue($setToProductTags);
+//        }
+//
+//        $Product->save();
+//        /****** TEMPORARY PATCH END *******/
 
         // update products to tags
 
