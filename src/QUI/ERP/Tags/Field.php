@@ -16,6 +16,9 @@ use QUI\ERP\Products;
  */
 class Field extends Products\Field\Field
 {
+    /**
+     * Field type
+     */
     const TYPE = 'productstags.tags';
 
     /**
@@ -23,6 +26,9 @@ class Field extends Products\Field\Field
      */
     const FIELD_TAGS = 101;
 
+    /**
+     * @var bool
+     */
     public $searchable = false;
 
     /**
@@ -388,6 +394,16 @@ class Field extends Products\Field\Field
         $this->tagManagers[$lang] = $TagManager;
 
         return $TagManager;
+    }
+
+    /**
+     * Return the view
+     *
+     * @return \QUI\ERP\Products\Field\View
+     */
+    public function getFrontendView()
+    {
+        return new FieldFrontendView($this->getFieldDataForView());
     }
 
 //    /**
