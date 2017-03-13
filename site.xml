@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+    <types>
+
+        <type type="types/list">
+            <locale group="quiqqer/productstags" var="admin.types.list"/>
+            <desc>
+                <locale group="quiqqer/productstags" var="admin.types.list.desc"/>
+            </desc>
+
+            <!-- extra attributes -->
+            <attributes>
+                <attribute>quiqqer.productstags.tags</attribute>
+            </attributes>
+
+            <settings>
+                <category>
+                    <settings>
+                        <title>
+                            <locale group="quiqqer/productstags"
+                                    var="type.list.settings.title"
+                            />
+                        </title>
+
+                        <input conf="quiqqer.productstags.tags"
+                               data-qui="package/quiqqer/tags/bin/tags/Select"
+                        >
+                            <text>
+                                <locale group="quiqqer/productstags" var="quiqqer.productstags.tags"/>
+                            </text>
+                        </input>
+                    </settings>
+                </category>
+            </settings>
+        </type>
+
+    </types>
+</site>
