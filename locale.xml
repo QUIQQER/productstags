@@ -24,10 +24,28 @@
             <en><![CDATA[Generate attribute list tags]]></en>
         </locale>
         <locale name="cron.generateProductAttributeListTags.description">
-            <de>
-                <![CDATA[Erstellt aus allen Einträgen von allen Auswahllisten Tags und weist sie Tag-Feldern in Produkten zu]]></de>
-            <en>
-                <![CDATA[Creates tags for every entry in every attribute list and assigns them to tag fields in products]]></en>
+            <de><![CDATA[
+                Erstellt aus allen Einträgen von allen Auswahllisten Tags und weist sie Tag-Feldern in Produkten zu
+            ]]></de>
+            <en><![CDATA[
+                Creates tags for every entry in every attribute list and assigns them to tag fields in products
+            ]]></en>
+        </locale>
+        <locale name="admin.types.list">
+            <de><![CDATA[Produktliste nach Tags]]></de>
+            <en><![CDATA[Product List by Tags]]></en>
+        </locale>
+        <locale name="admin.types.list.desc">
+            <de><![CDATA[Lassen Sie Produkte für bestimmte Tags anzeigen]]></de>
+            <en><![CDATA[Show products for specific tags]]></en>
+        </locale>
+        <locale name="type.list.settings.title">
+            <de><![CDATA[Produktliste]]></de>
+            <en><![CDATA[Product List]]></en>
+        </locale>
+        <locale name="quiqqer.productstags.tags">
+            <de><![CDATA[Produkttags]]></de>
+            <en><![CDATA[Product tags]]></en>
         </locale>
 
     </groups>
