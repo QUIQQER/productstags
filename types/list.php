@@ -14,13 +14,14 @@ if (!is_string($tags)) {
  */
 $ProductList = new ProductList(array(
 //    'categoryId'           => $Site->getAttribute('quiqqer.products.settings.categoryId'),
-    'categoryView' => false,
-    'showFilter'   => false,
-    'searchParams' => array(
+    'categoryView'   => false,
+    'showFilter'     => false,
+    'showFilterInfo' => false,
+    'searchParams'   => array(
         'tags' => explode(',', $tags)
     ),
-    'autoload'     => false,
-    'view'         => Products\Utils\Search::getViewParameterFromRequest()
+    'autoload'       => false,
+    'view'           => Products\Utils\Search::getViewParameterFromRequest()
 ));
 
 $Engine->assign(array(
