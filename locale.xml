@@ -7,6 +7,35 @@
             <de><![CDATA[QUIQQER - Shop - Produkttags]]></de>
             <en><![CDATA[QUIQQER - Shop - Producttags]]></en>
         </locale>
+        <locale name="package.description" html="true">
+            <de><![CDATA[
+            Produkte Tags / Filter ist ein Modul, welches die QUIQQER Produkte um Tags und Filtermöglichkeiten erweitert.<br />
+            Produkte können über das Tagging-System umfangreich katalogisiert und gefiltert werden.
+            Die Kategorisierung kann manuell durch das hinzufügen von Tags zu einem Produkt vorgenommen oder automatisch generiert werden
+            (z.B. aus den Tags der Produktkategorien oder Produktattributen aus verschiedenen Feldtypen (Auswahllisten, Preise etc.)).  Ihr Shop wird so - zusätzlich zur Produktsuche - noch flexibler und Ihre Produkte noch einfach auffindbar.
+            ]]></de>
+            <en><![CDATA[
+            Products Tags / Filter is a module that expands the QUIQQER products with tags and filter possibilities. <br />
+            Products can be cataloged and filtered through the tagging system.
+            The categorization can be done manually by adding tags to a product or automatically generated
+            (For example, from the tags of the product categories or product attributes from different field types (selection lists, prices, etc.)). In addition to product search,
+            your shop is thus even more flexible and your products can be easily found.
+            ]]></en>
+        </locale>
+        <locale name="quiqqer/productstags:types/list.title">
+            <de><![CDATA[Produktliste (Tags)]]></de>
+            <en><![CDATA[Product list (Tags)]]></en>
+        </locale>
+        <locale name="quiqqer/productstags:types/list.description">
+            <de><![CDATA[
+            Mit Hilfe dieses Seitentyps kann vollautomatisch eine Produktliste erzeugt werden.
+            In den Einstellungen des Seitentyps lassen sich flexibel beliebige Tags definieren. Gelistet werden sämtliche Produkte die entsprechend manuell oder vom System vertaggt wurden.
+            ]]></de>
+            <en><![CDATA[
+            With this side type, a product list can be generated automatically.
+            In the page type settings, tags can be flexibly defined. All products which have been manually or manually ordered by the system are listed.
+            ]]></en>
+        </locale>
         <locale name="field.tag">
             <de><![CDATA[Tags]]></de>
             <en><![CDATA[Tags]]></en>
