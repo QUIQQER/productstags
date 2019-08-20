@@ -90,4 +90,11 @@
         </locale>
     </groups>
 
+    <groups name="quiqqer/products" datatype="php,js">
+        <locale name="fieldtype.productstags.tags">
+            <de><![CDATA[Produkttags]]></de>
+            <en><![CDATA[Product tags]]></en>
+        </locale>
+    </groups>
+
 </locales>
