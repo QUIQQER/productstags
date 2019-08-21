@@ -62,7 +62,7 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
 
             Elm.set({
                 html: '<div class="language-select"></div>' +
-                      '<div class="tag-container"></div>'
+                    '<div class="tag-container"></div>'
             });
 
             var TagContainer  = Elm.getElement('.tag-container');
@@ -111,9 +111,10 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
                 });
 
                 this.$Tags = new Tags({
-                    projectName: QUIQQER_PROJECT.name,
-                    projectLang: current,
-                    events     : {
+                    projectName      : QUIQQER_PROJECT.name,
+                    projectLang      : current,
+                    considerMaxAmount: false,
+                    events           : {
                         onAdd   : function (Control, tag) {
                             self.$onAddTag(tag);
                         },
@@ -121,7 +122,7 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
                             self.$onRemoveTag(tag);
                         }
                     },
-                    styles     : {
+                    styles           : {
                         padding: 0,
                         height : '100%',
                         width  : '100%'
