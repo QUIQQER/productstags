@@ -1,13 +1,6 @@
 /**
  * @module package/quiqqer/productstags/bin/controls/FieldSettings
  * @author www.pcsg.de (Henning Leutz)
- *
- * @require qui/QUI
- * @require qui/controls/Control
- * @require qui/controls/buttons/Select
- * @require Locale
- * @require Projects
- * @require package/quiqqer/tags/bin/TagContainer
  */
 define('package/quiqqer/productstags/bin/controls/FieldSettings', [
 
@@ -62,7 +55,7 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
 
             Elm.set({
                 html: '<div class="language-select"></div>' +
-                '<div class="tag-container"></div>'
+                    '<div class="tag-container"></div>'
             });
 
             var TagContainer  = Elm.getElement('.tag-container');
@@ -111,40 +104,21 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
                 });
 
                 this.$Tags = new Tags({
-                    projectName: QUIQQER_PROJECT.name,
-                    projectLang: current,
-                    styles     : {
+                    projectName      : QUIQQER_PROJECT.name,
+                    projectLang      : current,
+                    considerMaxAmount: false,
+                    events           : {
+                        onAdd   : function (Control, tag) {
+                            self.$onAddTag(tag);
+                        },
+                        onRemove: function (Control, tag) {
+                            self.$onRemoveTag(tag);
+                        }
+                    },
+                    styles           : {
                         padding: 0,
                         height : '100%',
                         width  : '100%'
-                    },
-                    events     : {
-                        onChange: function (Control, tag) {
-                            var tags      = self.getAttribute('tags');
-                            var current   = self.getAttribute('current'),
-                                tagvalues = self.$Tags.getValue().split(',');
-
-                            if (!tags) {
-                                tags = {};
-                            }
-
-                            if (!tagvalues) {
-                                return;
-                            }
-
-                            if (!(current in tags)) {
-                                tags[current] = [];
-                            }
-
-                            for (var i = 0, len = tagvalues.length; i < len; i++) {
-                                tags[current].push({
-                                    tag      : tagvalues[i],
-                                    generator: 'user'
-                                });
-                            }
-
-                            self.setAttribute('value', tags);
-                        }
                     }
                 }).inject(TagContainer);
 
@@ -177,6 +151,52 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
         },
 
         /**
+         * event: on add tag from tag container
+         *
+         * @param {string} tag
+         */
+        $onAddTag: function (tag) {
+            var current = this.getAttribute('current');
+            var tags    = this.getAttribute('value');
+
+            if (!(current in tags)) {
+                return;
+            }
+
+            tags[current].push({
+                tag      : tag,
+                generator: 'user'
+            });
+
+            this.setAttribute('value', tags);
+        },
+
+        /**
+         * event: on remove tag from tag container
+         *
+         * @param {string} tag
+         */
+        $onRemoveTag: function (tag) {
+            var current = this.getAttribute('current');
+            var tags    = this.getAttribute('value');
+
+            if (!(current in tags)) {
+                return;
+            }
+
+            var langTags = tags[current];
+
+            for (var i = 0, len = langTags.length; i < len; i++) {
+                if (langTags[i].tag == tag) {
+                    tags[current].splice(i, 1);
+                    break;
+                }
+            }
+
+            this.setAttribute('value', tags);
+        },
+
+        /**
          * Change language
          *
          * @param {String} lang
@@ -192,11 +212,7 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
                 tags      = this.getAttribute('value'),
                 tagvalues = this.$Tags.getValue().split(',');
 
-            if (!tags) {
-                return;
-            }
-
-            if (!(current in tags)) {
+            if (typeof tags[current] === 'undefined') {
                 tags[current] = [];
             }
 
@@ -256,7 +272,7 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
          * @return {String}
          */
         save: function () {
-            //this.$changeLanguage(this.getAttribute('current'));
+            this.$changeLanguage(this.getAttribute('current'));
             return JSON.encode(this.getValue());
         }
     });
