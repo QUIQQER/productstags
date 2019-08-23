@@ -3,6 +3,7 @@
 /**
  * This file contains QUI\ERP\Tags\Field
  */
+
 namespace QUI\ERP\Tags;
 
 use QUI;
@@ -18,12 +19,13 @@ class ProductEvents
 {
     /**
      * @param Products\Product\Model $Product
+     * @throws QUI\Exception
      */
     public static function onProductSave($Product)
     {
         $tagFields   = $Product->getFieldsByType(Field::TYPE);
         $pId         = $Product->getId();
-        $productTags = array();
+        $productTags = [];
 
         /** @var Field $Field */
         foreach ($tagFields as $Field) {
@@ -31,7 +33,7 @@ class ProductEvents
 
             foreach ($tags as $lang => $langTags) {
                 if (!isset($productTags[$lang])) {
-                    $productTags[$lang] = array();
+                    $productTags[$lang] = [];
                 }
 
                 $productTags[$lang] = array_merge($productTags[$lang], $langTags);
@@ -47,13 +49,13 @@ class ProductEvents
             $tblProducts2Tags = QUI::getDBProjectTableName(Crons::TBL_PRODUCTS_2_TAGS, $LangProject);
 
             // check if entry exists
-            $result = $DB->fetch(array(
+            $result = $DB->fetch([
                 'count' => 1,
                 'from'  => $tblProducts2Tags,
-                'where' => array(
+                'where' => [
                     'id' => $pId
-                )
-            ));
+                ]
+            ]);
 
             $exists = false;
 
@@ -65,9 +67,9 @@ class ProductEvents
             if ($exists && empty($langTags)) {
                 $DB->delete(
                     $tblProducts2Tags,
-                    array(
+                    [
                         'id' => $pId
-                    )
+                    ]
                 );
 
                 continue;
@@ -78,14 +80,16 @@ class ProductEvents
                 continue;
             }
 
+            $langTags = array_values(array_unique($langTags));
+
             // if products didnt have tags previously but now does -> insert
             if (!$exists) {
                 $DB->insert(
                     $tblProducts2Tags,
-                    array(
+                    [
                         'id'   => $pId,
-                        'tags' => ',' . implode(',', $langTags) . ','
-                    )
+                        'tags' => ','.implode(',', $langTags).','
+                    ]
                 );
 
                 continue;
@@ -94,24 +98,24 @@ class ProductEvents
             // if products did have tags previously and now does too -> update
             $DB->update(
                 $tblProducts2Tags,
-                array(
-                    'tags' => ',' . implode(',', $langTags) . ','
-                ),
-                array(
+                [
+                    'tags' => ','.implode(',', $langTags).','
+                ],
+                [
                     'id' => $pId
-                )
+                ]
             );
 
             // upate product cache table with tags
             $DB->update(
                 Products\Utils\Tables::getProductCacheTableName(),
-                array(
-                    'tags' => ',' . implode(',', $langTags) . ','
-                ),
-                array(
+                [
+                    'tags' => ','.implode(',', $langTags).','
+                ],
+                [
                     'id'   => $Product->getId(),
                     'lang' => $lang
-                )
+                ]
             );
         }
 
@@ -120,27 +124,27 @@ class ProductEvents
             $LangProject      = QUI::getProject($Project->getName(), $lang);
             $tblTags2Products = QUI::getDBProjectTableName(Crons::TBL_TAGS_2_PRODUCTS, $LangProject);
 
-            $insertTagsDB = array();
-            $updateTagsDB = array();
-            $deleteTagsDB = array();
+            $insertTagsDB = [];
+            $updateTagsDB = [];
+            $deleteTagsDB = [];
 
             // get all tags that are currently associated with this product (in the database)
-            $tagsWithProduct = array();
-            $tags2ProductIds = array();
+            $tagsWithProduct = [];
+            $tags2ProductIds = [];
 
-            $result = $DB->fetch(array(
-                'select' => array(
+            $result = $DB->fetch([
+                'select' => [
                     'tag',
                     'productIds'
-                ),
+                ],
                 'from'   => $tblTags2Products,
-                'where'  => array(
-                    'productIds' => array(
+                'where'  => [
+                    'productIds' => [
                         'type'  => '%LIKE%',
-                        'value' => ',' . $pId . ','
-                    )
-                )
-            ));
+                        'value' => ','.$pId.','
+                    ]
+                ]
+            ]);
 
             foreach ($result as $row) {
                 $tagsWithProduct[] = $row['tag'];
@@ -174,12 +178,12 @@ class ProductEvents
             if (!empty($deleteTagsDB)) {
                 $DB->delete(
                     $tblTags2Products,
-                    array(
-                        'tag' => array(
+                    [
+                        'tag' => [
                             'type'  => 'IN',
                             'value' => $deleteTagsDB
-                        )
-                    )
+                        ]
+                    ]
                 );
             }
 
@@ -187,22 +191,22 @@ class ProductEvents
             $newTags = array_diff($langTags, $tagsWithProduct);
 
             // get new tags from database to check if they have currently other products associated with them
-            $tags2OtherProductIds = array();
+            $tags2OtherProductIds = [];
 
             if (!empty($newTags)) {
-                $result = $DB->fetch(array(
-                    'select' => array(
+                $result = $DB->fetch([
+                    'select' => [
                         'tag',
                         'productIds'
-                    ),
+                    ],
                     'from'   => $tblTags2Products,
-                    'where'  => array(
-                        'tag' => array(
+                    'where'  => [
+                        'tag' => [
                             'type'  => 'IN',
                             'value' => $newTags
-                        )
-                    )
-                ));
+                        ]
+                    ]
+                ]);
 
                 foreach ($result as $row) {
                     $productIds = trim($row['productIds'], ',');
@@ -221,17 +225,17 @@ class ProductEvents
                     continue;
                 }
 
-                $insertTagsDB[$tag] = array($pId);
+                $insertTagsDB[$tag] = [$pId];
             }
 
             // insert new tag entries
             foreach ($insertTagsDB as $tag => $productIds) {
                 $DB->insert(
                     $tblTags2Products,
-                    array(
+                    [
                         'tag'        => $tag,
-                        'productIds' => ',' . implode(',', $productIds) . ','
-                    )
+                        'productIds' => ','.implode(',', $productIds).','
+                    ]
                 );
             }
 
@@ -239,12 +243,12 @@ class ProductEvents
             foreach ($updateTagsDB as $tag => $productIds) {
                 $DB->update(
                     $tblTags2Products,
-                    array(
-                        'productIds' => ',' . implode(',', $productIds) . ','
-                    ),
-                    array(
+                    [
+                        'productIds' => ','.implode(',', $productIds).','
+                    ],
+                    [
                         'tag' => $tag
-                    )
+                    ]
                 );
             }
         }
