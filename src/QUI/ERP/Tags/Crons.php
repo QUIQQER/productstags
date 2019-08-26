@@ -417,35 +417,35 @@ class Crons
         // Set tags to products
         foreach ($tagsToProducts as $productId => $tags) {
             $Product       = Products::getProduct($productId);
-            $tagFields     = $Product->getFieldsByType(QUI\ERP\Tags\Field::TYPE);
             $forbiddenTags = [];
 
-            /**
-             * Determine tags that should NOT be added. This is the case if the product has
-             * a field of type AttributeGroup and has only selected one or less than all entries
-             * from that field as its value.
-             */
-            /** @var QUI\ERP\Products\Field\Types\AttributeGroup $AttributeGroupField */
-            foreach ($Product->getFieldsByType(Fields::TYPE_ATTRIBUTE_GROUPS) as $AttributeGroupField) {
-                $productValueId = $AttributeGroupField->getValue();
-                $fieldId        = $AttributeGroupField->getId();
+            if ($Product->getType() === QUI\ERP\Products\Product\Types\VariantChild::class) {
+                /**
+                 * Determine tags that should NOT be added. This is the case if the product has
+                 * a field of type AttributeGroup and has only selected one or less than all entries
+                 * from that field as its value.
+                 */
+                /** @var QUI\ERP\Products\Field\Types\AttributeGroup $AttributeGroupField */
+                foreach ($Product->getFieldsByType(Fields::TYPE_ATTRIBUTE_GROUPS) as $AttributeGroupField) {
+                    $productValueId = $AttributeGroupField->getValue();
+                    $fieldId        = $AttributeGroupField->getId();
 
-                if (empty($productValueId)) {
-                    continue;
-                }
+                    if (!isset($tagsPerAttributeGroupField[$fieldId])) {
+                        continue;
+                    }
 
-                if (!isset($tagsPerAttributeGroupField[$fieldId])) {
-                    continue;
-                }
-
-                foreach ($tagsPerAttributeGroupField[$fieldId] as $valueId => $valueTags) {
-                    if ($valueId != $productValueId) {
-                        foreach ($valueTags as $valueLang => $valueTag) {
-                            $forbiddenTags[$valueLang][] = $valueTag;
+                    foreach ($tagsPerAttributeGroupField[$fieldId] as $valueId => $valueTags) {
+                        if ($valueId != $productValueId) {
+                            foreach ($valueTags as $valueLang => $valueTag) {
+                                $forbiddenTags[$valueLang][] = $valueTag;
+                            }
                         }
                     }
                 }
             }
+
+            // Add tags to the product
+            $tagFields = $Product->getFieldsByType(QUI\ERP\Tags\Field::TYPE);
 
             /** @var QUI\ERP\Tags\Field $ProductField */
             foreach ($tagFields as $ProductField) {
@@ -467,9 +467,7 @@ class Crons
         // delete tag groups that are not existing anymore and have no user-tags added
         foreach ($tagGroupIdsCurrent as $lang => $projects) {
             foreach ($projects as $projectName => $tagGroupIds) {
-                if (!isset($tagsGroupIdsNew[$lang])
-                    && !isset($tagsGroupIdsNew[$lang][$projectName])
-                ) {
+                if (empty($tagsGroupIdsNew[$lang][$projectName])) {
                     continue;
                 }
 
