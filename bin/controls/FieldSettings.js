@@ -108,10 +108,7 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
                     projectLang      : current,
                     considerMaxAmount: false,
                     events           : {
-                        onAdd   : function (Control, tag) {
-                            self.$onAddTag(tag);
-                        },
-                        onRemove: function (Control, tag) {
+                        onRemoveTag: function (tag) {
                             self.$onRemoveTag(tag);
                         }
                     },
@@ -148,27 +145,6 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
                 }
 
             }.bind(this));
-        },
-
-        /**
-         * event: on add tag from tag container
-         *
-         * @param {string} tag
-         */
-        $onAddTag: function (tag) {
-            var current = this.getAttribute('current');
-            var tags    = this.getAttribute('value');
-
-            if (!(current in tags)) {
-                return;
-            }
-
-            tags[current].push({
-                tag      : tag,
-                generator: 'user'
-            });
-
-            this.setAttribute('value', tags);
         },
 
         /**
@@ -211,6 +187,10 @@ define('package/quiqqer/productstags/bin/controls/FieldSettings', [
             var current   = this.getAttribute('current'),
                 tags      = this.getAttribute('value'),
                 tagvalues = this.$Tags.getValue().split(',');
+
+            if (!tags) {
+                tags = {};
+            }
 
             if (typeof tags[current] === 'undefined') {
                 tags[current] = [];

@@ -49,15 +49,15 @@
             <en><![CDATA[Creates and updates cache tables for all tags that are assigned to products.]]></en>
         </locale>
         <locale name="cron.generateProductAttributeListTags.title">
-            <de><![CDATA[Auswahllisten-Tags generieren]]></de>
-            <en><![CDATA[Generate attribute list tags]]></en>
+            <de><![CDATA[Produkt-Tags generieren]]></de>
+            <en><![CDATA[Generate product tags]]></en>
         </locale>
         <locale name="cron.generateProductAttributeListTags.description">
             <de><![CDATA[
-                Erstellt aus allen Einträgen von allen Auswahllisten Tags und weist sie Tag-Feldern in Produkten zu
+                Weist Produkten auf Grund ihrerer zugewiesenen Attribut- und Auswahllisten-Felder Tags zu
             ]]></de>
             <en><![CDATA[
-                Creates tags for every entry in every attribute list and assigns them to tag fields in products
+                Assigns tags to products based on their assigned attribute list and select list fields
             ]]></en>
         </locale>
         <locale name="admin.types.list">

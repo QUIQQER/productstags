@@ -3,6 +3,7 @@
 /**
  * This file contains QUI\ERP\Tags\Field
  */
+
 namespace QUI\ERP\Tags;
 
 use QUI;
@@ -36,17 +37,17 @@ class Field extends Products\Field\Field
      *
      * @var array
      */
-    protected $tagManagers = array();
+    protected $tagManagers = [];
 
     /**
      * These options must be part of a field value
      *
      * @var array
      */
-    protected $valueOptions = array(
+    protected $valueOptions = [
         'tag'       => true,
         'generator' => true
-    );
+    ];
 
     /**
      * Cleanup the value, the value is valid now
@@ -61,49 +62,55 @@ class Field extends Products\Field\Field
         }
 
         if (!is_array($value)) {
-            return array();
+            return [];
         }
 
         $Project   = QUI::getProjectManager()->getStandard();
         $languages = $Project->getLanguages();
-        $result    = array();
+        $result    = [];
 
         foreach ($languages as $lang) {
             if (!isset($value[$lang])) {
-                $result[$lang] = array();
+                $result[$lang] = [];
                 continue;
             }
 
             $tags = $value[$lang];
 
             if (!is_array($tags)) {
-                $result[$lang] = array();
+                $result[$lang] = [];
                 continue;
             }
 
             $TagManager = $this->getTagManager($lang);
-            $tagresult  = array();
+            $tagresult  = [];
+            $addedTags  = [];
 
             foreach ($tags as $tagData) {
                 foreach ($this->valueOptions as $option => $v) {
-                    if (!isset($tagData[$option])
-                        || empty($tagData[$option])
-                    ) {
+                    if (empty($tagData[$option])) {
                         continue 2;
                     }
                 }
 
-                if (!$TagManager->existsTag($tagData['tag'])) {
+                $tag = $tagData['tag'];
+
+                if (isset($addedTags[$tag])) {
                     continue;
                 }
 
-                $resultTagData = array();
+                if (!$TagManager->existsTag($tag)) {
+                    continue;
+                }
+
+                $resultTagData = [];
 
                 foreach ($this->valueOptions as $option => $v) {
                     $resultTagData[$option] = $tagData[$option];
                 }
 
-                $tagresult[] = $resultTagData;
+                $tagresult[]     = $resultTagData;
+                $addedTags[$tag] = true; // cache added tags to prevent duplicates
             }
 
             $result[$lang] = $tagresult;
@@ -127,15 +134,15 @@ class Field extends Products\Field\Field
 
         if (!is_string($value) && !is_array($value)) {
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Products\Field\Exception(array(
+                throw new Products\Field\Exception([
                     'quiqqer/products',
                     'exception.field.invalid',
-                    array(
+                    [
                         'fieldId'    => $this->getId(),
                         'fieldTitle' => $this->getTitle(),
                         'fieldType'  => $this->getType()
-                    )
-                ));
+                    ]
+                ]);
             }
         }
 
@@ -143,15 +150,15 @@ class Field extends Products\Field\Field
             json_decode($value, true);
 
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Products\Field\Exception(array(
+                throw new Products\Field\Exception([
                     'quiqqer/products',
                     'exception.field.invalid',
-                    array(
+                    [
                         'fieldId'    => $this->getId(),
                         'fieldTitle' => $this->getTitle(),
                         'fieldType'  => $this->getType()
-                    )
-                ));
+                    ]
+                ]);
             }
         }
     }
@@ -173,10 +180,10 @@ class Field extends Products\Field\Field
             return false;
         }
 
-        $tags[$lang][] = array(
+        $tags[$lang][] = [
             'tag'       => $tag,
             'generator' => $generator
-        );
+        ];
 
         $this->setValue($tags);
 
@@ -200,13 +207,13 @@ class Field extends Products\Field\Field
             return false;
         }
 
-        $newTags = array();
+        $newTags = [];
 
         foreach ($tags as $tag) {
-            $newTags[] = array(
+            $newTags[] = [
                 'tag'       => $tag,
                 'generator' => $generator
-            );
+            ];
         }
 
         $fieldTags[$lang] = array_merge($fieldTags[$lang], $newTags);
@@ -234,7 +241,7 @@ class Field extends Products\Field\Field
         }
 
         if (is_null($generator)) {
-            $tags[$lang] = array();
+            $tags[$lang] = [];
             $this->setValue($tags);
 
             return true;
@@ -291,18 +298,18 @@ class Field extends Products\Field\Field
         $val = $this->getValue();
 
         if (empty($val)) {
-            $val = array();
+            $val = [];
         }
 
         if (!is_array($val)) {
             $val = json_decode($val, true);
         }
 
-        $tags = array();
+        $tags = [];
 
         foreach ($val as $lang => $langTags) {
             if (!isset($tags[$lang])) {
-                $tags[$lang] = array();
+                $tags[$lang] = [];
             }
 
             foreach ($langTags as $tagData) {
@@ -330,18 +337,18 @@ class Field extends Products\Field\Field
         $val = $this->getValue();
 
         if (empty($val)) {
-            $val = array();
+            $val = [];
         }
 
         if (!is_array($val)) {
             $val = json_decode($val, true);
         }
 
-        $tags = array();
+        $tags = [];
 
         foreach ($val as $lang => $langTags) {
             if (!isset($tags[$lang])) {
-                $tags[$lang] = array();
+                $tags[$lang] = [];
             }
 
             foreach ($langTags as $tagData) {
