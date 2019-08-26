@@ -150,7 +150,7 @@ class Crons
      */
     public static function generateProductAttributeListTags()
     {
-        ini_set('display_errors', 1);
+//        ini_set('display_errors', 1);
 
         $fields = Fields::getFields([
             'where' => [
