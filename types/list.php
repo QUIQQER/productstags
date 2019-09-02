@@ -12,18 +12,19 @@ if (!is_string($tags)) {
 /**
  * CATEGORY
  */
-$ProductList = new ProductList(array(
+$ProductList = new ProductList([
 //    'categoryId'           => $Site->getAttribute('quiqqer.products.settings.categoryId'),
     'categoryView'   => false,
     'showFilter'     => false,
     'showFilterInfo' => false,
-    'searchParams'   => array(
+    'searchParams'   => [
         'tags' => explode(',', $tags)
-    ),
+    ],
     'autoload'       => false,
-    'view'           => Products\Utils\Search::getViewParameterFromRequest()
-));
+    'view'           => Products\Utils\Search::getViewParameterFromRequest(),
+    'autoloadAfter'  => false
+]);
 
-$Engine->assign(array(
+$Engine->assign([
     'ProductList' => $ProductList
-));
+]);
