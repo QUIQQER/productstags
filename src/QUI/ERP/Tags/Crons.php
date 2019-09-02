@@ -53,10 +53,10 @@ class Crons
             $Statement->execute();
         }
 
-        $productIds  = QUI\ERP\Products\Handler\Products::getProductIds();
-        $tagProducts = [];
+        $productIds = QUI\ERP\Products\Handler\Products::getProductIds();
 
         foreach ($productIds as $productId) {
+<<<<<<< HEAD
             $Product   = Products::getProduct($productId);
 
             ProductEvents::onProductSave($Product);
@@ -145,6 +145,9 @@ class Crons
 
                 $DataBase->insert($tblTags2Products, $data);
             }
+=======
+            ProductEvents::onProductSave(Products::getProduct($productId));
+>>>>>>> dev
         }
     }
 
