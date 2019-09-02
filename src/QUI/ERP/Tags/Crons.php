@@ -53,92 +53,10 @@ class Crons
             $Statement->execute();
         }
 
-        $productIds  = QUI\ERP\Products\Handler\Products::getProductIds();
-        $tagProducts = [];
+        $productIds = QUI\ERP\Products\Handler\Products::getProductIds();
 
         foreach ($productIds as $productId) {
-            $Product   = Products::getProduct($productId);
-            $tagFields = $Product->getFieldsByType(Field::TYPE);
-
-            if (empty($tagFields)) {
-                continue;
-            }
-
-            $productTags = [];
-
-            /** @var Field $Field */
-            foreach ($tagFields as $Field) {
-                $tags = $Field->getTags();
-                $tags = $Field->cleanup($tags);
-
-                // build products2tags for this product
-                foreach ($langs as $lang) {
-                    if (!isset($productTags[$lang])) {
-                        $productTags[$lang] = [];
-                    }
-
-                    if (isset($tags[$lang])) {
-                        $productTags[$lang] = array_merge($productTags[$lang], $tags[$lang]);
-                    }
-                }
-
-                // build tags2products
-                foreach ($tags as $lang => $langTags) {
-                    if (!isset($tagProducts[$lang])) {
-                        $tagProducts[$lang] = [];
-                    }
-
-                    foreach ($langTags as $tag) {
-                        if (!isset($tagProducts[$lang][$tag])) {
-                            $tagProducts[$lang][$tag] = [];
-                        }
-
-                        $tagProducts[$lang][$tag][] = $Product->getId();
-                    }
-                }
-            }
-
-            // insert products to tags
-            foreach ($langs as $l) {
-                if (empty($productTags[$l])) {
-                    continue;
-                }
-
-                $data = [
-                    'id'   => $Product->getId(),
-                    'tags' => ','.implode(',', $productTags[$l]).','
-                ];
-
-                $LangProject      = QUI::getProject($Project->getName(), $l);
-                $tblProducts2Tags = QUI::getDBProjectTableName(self::TBL_PRODUCTS_2_TAGS, $LangProject);
-
-                $DataBase->insert($tblProducts2Tags, $data);
-            }
-        }
-
-        // insert tags to products
-        foreach ($tagProducts as $lang => $langTags) {
-            foreach ($langTags as $tag => $productIds) {
-                $LangProject      = QUI::getProject($Project->getName(), $lang);
-                $tblTags2Products = QUI::getDBProjectTableName(self::TBL_TAGS_2_PRODUCTS, $LangProject);
-
-                // delete tag entry if no products are assigned
-                if (empty($productIds)) {
-                    $DataBase->delete(
-                        $tblTags2Products,
-                        [
-                            'tag' => $tag
-                        ]
-                    );
-                }
-
-                $data = [
-                    'tag'        => $tag,
-                    'productIds' => ','.implode(',', $productIds).','
-                ];
-
-                $DataBase->insert($tblTags2Products, $data);
-            }
+            ProductEvents::onProductSave(Products::getProduct($productId));
         }
     }
 
