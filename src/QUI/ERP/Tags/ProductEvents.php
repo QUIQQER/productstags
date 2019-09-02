@@ -71,8 +71,6 @@ class ProductEvents
                         'id' => $pId
                     ]
                 );
-
-                continue;
             }
 
             // if product didnt have tags previoulsy and now doesnt either -> do nothing
@@ -91,8 +89,6 @@ class ProductEvents
                         'tags' => ','.implode(',', $langTags).','
                     ]
                 );
-
-                continue;
             }
 
             // if products did have tags previously and now does too -> update
