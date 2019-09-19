@@ -36,7 +36,7 @@ class ProductEvents
                     $productTags[$lang] = [];
                 }
 
-                $productTags[$lang] = array_merge($productTags[$lang], $langTags);
+                $productTags[$lang] = \array_merge($productTags[$lang], $langTags);
             }
         }
 
@@ -59,7 +59,7 @@ class ProductEvents
 
             $exists = false;
 
-            if (current(current($result)) > 0) {
+            if (\current(\current($result)) > 0) {
                 $exists = true;
             }
 
@@ -78,7 +78,7 @@ class ProductEvents
                 continue;
             }
 
-            $langTags = array_values(array_unique($langTags));
+            $langTags = \array_values(\array_unique($langTags));
 
             // if products didnt have tags previously but now does -> insert
             if (!$exists) {
@@ -86,7 +86,7 @@ class ProductEvents
                     $tblProducts2Tags,
                     [
                         'id'   => $pId,
-                        'tags' => ','.implode(',', $langTags).','
+                        'tags' => ','.\implode(',', $langTags).','
                     ]
                 );
             }
@@ -95,7 +95,7 @@ class ProductEvents
             $DB->update(
                 $tblProducts2Tags,
                 [
-                    'tags' => ','.implode(',', $langTags).','
+                    'tags' => ','.\implode(',', $langTags).','
                 ],
                 [
                     'id' => $pId
@@ -145,17 +145,17 @@ class ProductEvents
             foreach ($result as $row) {
                 $tagsWithProduct[] = $row['tag'];
 
-                $productIds = trim($row['productIds'], ',');
-                $productIds = explode(',', $productIds);
+                $productIds = \trim($row['productIds'], ',');
+                $productIds = \explode(',', $productIds);
 
                 $tags2ProductIds[$row['tag']] = $productIds;
             }
 
             // determine all tags that have been previously but no longer are associated with this product
-            $deleteTags = array_diff($tagsWithProduct, $langTags);
+            $deleteTags = \array_diff($tagsWithProduct, $langTags);
 
             foreach ($deleteTags as $tag) {
-                $pIdKey = array_search($pId, $tags2ProductIds[$tag]);
+                $pIdKey = \array_search($pId, $tags2ProductIds[$tag]);
 
                 if ($pIdKey === false) {
                     continue;
@@ -184,7 +184,7 @@ class ProductEvents
             }
 
             // determine all tags that have been added to the product
-            $newTags = array_diff($langTags, $tagsWithProduct);
+            $newTags = \array_diff($langTags, $tagsWithProduct);
 
             // get new tags from database to check if they have currently other products associated with them
             $tags2OtherProductIds = [];
@@ -205,8 +205,8 @@ class ProductEvents
                 ]);
 
                 foreach ($result as $row) {
-                    $productIds = trim($row['productIds'], ',');
-                    $productIds = explode(',', $productIds);
+                    $productIds = \trim($row['productIds'], ',');
+                    $productIds = \explode(',', $productIds);
 
                     $tags2OtherProductIds[$row['tag']] = $productIds;
                 }
@@ -230,7 +230,7 @@ class ProductEvents
                     $tblTags2Products,
                     [
                         'tag'        => $tag,
-                        'productIds' => ','.implode(',', $productIds).','
+                        'productIds' => ','.\implode(',', $productIds).','
                     ]
                 );
             }
@@ -240,7 +240,7 @@ class ProductEvents
                 $DB->update(
                     $tblTags2Products,
                     [
-                        'productIds' => ','.implode(',', $productIds).','
+                        'productIds' => ','.\implode(',', $productIds).','
                     ],
                     [
                         'tag' => $tag

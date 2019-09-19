@@ -3,6 +3,7 @@
 /**
  * This file contains QUI\ERP\Tags\Field
  */
+
 namespace QUI\ERP\Tags;
 
 use QUI;
@@ -33,7 +34,7 @@ class Events
      */
     protected static function createTagStandardField()
     {
-        $fieldData = array(
+        $fieldData = [
             'id'            => Field::FIELD_TAGS,
             'type'          => Field::TYPE,
             'prefix'        => '',
@@ -44,29 +45,29 @@ class Events
             'requiredField' => 0,
             'publicField'   => 1,
             'search_type'   => '',
-            'options'       => array(
+            'options'       => [
                 'insert_tags' => true
-            ),
-            'titles'        => array(
+            ],
+            'titles'        => [
                 'de' => 'Tags',
                 'en' => 'Tags'
-            )
-        );
+            ]
+        ];
 
         // check if field exists
-        $result = QUI::getDataBase()->fetch(array(
+        $result = QUI::getDataBase()->fetch([
             'count' => 1,
             'from'  => QUI\ERP\Products\Utils\Tables::getFieldTableName(),
-            'where' => array(
+            'where' => [
                 'id' => Field::FIELD_TAGS
-            )
-        ));
+            ]
+        ]);
 
         // if field exists -> update
-        if (current(current($result)) > 0) {
+        if (\current(\current($result)) > 0) {
             QUI::getDataBase()->update(
                 QUI\ERP\Products\Utils\Tables::getFieldTableName(),
-                array(
+                [
                     'type'          => $fieldData['type'],
                     'prefix'        => $fieldData['prefix'],
                     'suffix'        => $fieldData['suffix'],
@@ -74,32 +75,32 @@ class Events
                     'systemField'   => $fieldData['systemField'],
                     'standardField' => $fieldData['standardField'],
                     'search_type'   => $fieldData['search_type'],
-                    'options'       => json_encode($fieldData['options'])
-                ),
-                array('id' => $fieldData['id'])
+                    'options'       => \json_encode($fieldData['options'])
+                ],
+                ['id' => $fieldData['id']]
             );
 
             Products\Handler\Fields::setFieldTranslations($fieldData['id'], $fieldData);
 
             // create / update view permission
-            QUI::getPermissionManager()->addPermission(array(
+            QUI::getPermissionManager()->addPermission([
                 'name'  => "permission.products.fields.field{$fieldData['id']}.view",
                 'title' => "quiqqer/products permission.products.fields.field{$fieldData['id']}.view.title",
                 'desc'  => "",
                 'type'  => 'bool',
                 'area'  => '',
                 'src'   => 'user'
-            ));
+            ]);
 
             // create / update edit permission
-            QUI::getPermissionManager()->addPermission(array(
+            QUI::getPermissionManager()->addPermission([
                 'name'  => "permission.products.fields.field{$fieldData['id']}.edit",
                 'title' => "quiqqer/products permission.products.fields.field{$fieldData['id']}.edit.title",
                 'desc'  => "",
                 'type'  => 'bool',
                 'area'  => '',
                 'src'   => 'user'
-            ));
+            ]);
 
             return;
         }
