@@ -28,31 +28,31 @@ class Manager
      */
     public function getProductIdsFromTags($tags, $lang, $limit = null)
     {
-        $ids     = array();
+        $ids     = [];
         $Project = QUI::getProjectManager()->getStandard();
         $Project = QUI::getProject($Project->getName(), $lang);
 
-        $result = QUI::getDataBase()->fetch(array(
-            'select' => array(
+        $result = QUI::getDataBase()->fetch([
+            'select' => [
                 'productIds'
-            ),
+            ],
             'from'   => QUI::getDBProjectTableName(Crons::TBL_TAGS_2_PRODUCTS, $Project),
-            'where'  => array(
-                'tag' => array(
+            'where'  => [
+                'tag' => [
                     'type'  => 'IN',
                     'value' => $tags
-                )
-            ),
-            'limit'  => is_null($limit) ? false : (int)$limit
-        ));
+                ]
+            ],
+            'limit'  => $limit === null ? false : (int)$limit
+        ]);
 
         if (empty($result)) {
             return $ids;
         }
 
-        $data = current($result);
-        $ids  = trim($data['productIds'], ',');
-        $ids  = explode(',', $ids);
+        $data = \current($result);
+        $ids  = \trim($data['productIds'], ',');
+        $ids  = \explode(',', $ids);
 
         return $ids;
     }
@@ -68,7 +68,7 @@ class Manager
      */
     public function getProductsFromTags($tags, $lang, $limit = null)
     {
-        $products   = array();
+        $products   = [];
         $productIds = $this->getProductIdsFromTags($tags, $lang, $limit);
 
         foreach ($productIds as $pId) {
@@ -91,26 +91,26 @@ class Manager
     {
         $Project = QUI::getProjectManager()->getStandard();
         $Project = QUI::getProject($Project->getName(), $lang);
-        $tags    = array();
+        $tags    = [];
 
-        $result = QUI::getDataBase()->fetch(array(
-            'select' => array(
+        $result = QUI::getDataBase()->fetch([
+            'select' => [
                 'tags'
-            ),
+            ],
             'from'   => QUI::getDBProjectTableName(Crons::TBL_PRODUCTS_2_TAGS, $Project),
-            'where'  => array(
+            'where'  => [
                 'id' => $Product->getId()
-            ),
-            'limit'  => is_null($limit) ? false : (int)$limit
-        ));
+            ],
+            'limit'  => $limit === null ? false : (int)$limit
+        ]);
 
         if (empty($result)) {
             return $tags;
         }
 
-        $data = current($result);
-        $tags = trim($data['tags'], ',');
-        $tags = explode(',', $tags);
+        $data = \current($result);
+        $tags = \trim($data['tags'], ',');
+        $tags = \explode(',', $tags);
 
         return $tags;
     }

@@ -57,11 +57,11 @@ class Field extends Products\Field\Field
      */
     public function cleanup($value)
     {
-        if (is_string($value)) {
-            $value = json_decode($value, true);
+        if (\is_string($value)) {
+            $value = \json_decode($value, true);
         }
 
-        if (!is_array($value)) {
+        if (!\is_array($value)) {
             return [];
         }
 
@@ -77,7 +77,7 @@ class Field extends Products\Field\Field
 
             $tags = $value[$lang];
 
-            if (!is_array($tags)) {
+            if (!\is_array($tags)) {
                 $result[$lang] = [];
                 continue;
             }
@@ -132,8 +132,8 @@ class Field extends Products\Field\Field
             return;
         }
 
-        if (!is_string($value) && !is_array($value)) {
-            if (json_last_error() !== JSON_ERROR_NONE) {
+        if (!\is_string($value) && !\is_array($value)) {
+            if (\json_last_error() !== JSON_ERROR_NONE) {
                 throw new Products\Field\Exception([
                     'quiqqer/products',
                     'exception.field.invalid',
@@ -146,10 +146,10 @@ class Field extends Products\Field\Field
             }
         }
 
-        if (is_string($value)) {
-            json_decode($value, true);
+        if (\is_string($value)) {
+            \json_decode($value, true);
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
+            if (\json_last_error() !== JSON_ERROR_NONE) {
                 throw new Products\Field\Exception([
                     'quiqqer/products',
                     'exception.field.invalid',
@@ -216,7 +216,7 @@ class Field extends Products\Field\Field
             ];
         }
 
-        $fieldTags[$lang] = array_merge($fieldTags[$lang], $newTags);
+        $fieldTags[$lang] = \array_merge($fieldTags[$lang], $newTags);
 
         $this->setValue($fieldTags);
 
@@ -240,7 +240,7 @@ class Field extends Products\Field\Field
             return true;
         }
 
-        if (is_null($generator)) {
+        if ($generator === null) {
             $tags[$lang] = [];
             $this->setValue($tags);
 
@@ -301,8 +301,8 @@ class Field extends Products\Field\Field
             $val = [];
         }
 
-        if (!is_array($val)) {
-            $val = json_decode($val, true);
+        if (!\is_array($val)) {
+            $val = \json_decode($val, true);
         }
 
         $tags = [];
@@ -313,7 +313,7 @@ class Field extends Products\Field\Field
             }
 
             foreach ($langTags as $tagData) {
-                if (!is_null($generator)) {
+                if (!\is_null($generator)) {
                     if ($tagData['generator'] != $generator) {
                         continue;
                     }
@@ -340,8 +340,8 @@ class Field extends Products\Field\Field
             $val = [];
         }
 
-        if (!is_array($val)) {
-            $val = json_decode($val, true);
+        if (!\is_array($val)) {
+            $val = \json_decode($val, true);
         }
 
         $tags = [];
@@ -352,7 +352,7 @@ class Field extends Products\Field\Field
             }
 
             foreach ($langTags as $tagData) {
-                if (!is_null($generator)) {
+                if (!\is_null($generator)) {
                     if ($tagData['generator'] != $generator) {
                         continue;
                     }

@@ -260,10 +260,10 @@ class Crons
                         foreach ($sites as $CategorySite) {
                             $Edit            = $CategorySite->getEdit();
                             $siteTagGroupIds = $Edit->getAttribute('quiqqer.tags.tagGroups');
-                            $siteTagGroupIds = explode(',', $siteTagGroupIds);
+                            $siteTagGroupIds = \explode(',', $siteTagGroupIds);
 
-                            $siteTagGroupIds = array_values(
-                                array_filter($siteTagGroupIds, function ($value) {
+                            $siteTagGroupIds = \array_values(
+                                \array_filter($siteTagGroupIds, function ($value) {
                                     return !empty($value);
                                 })
                             );
@@ -271,12 +271,12 @@ class Crons
                             // add tag groups to category sites
                             /** @var QUI\Tags\Groups\Group $TagGroup */
                             foreach ($tagGroups as $TagGroup) {
-                                if (!in_array($TagGroup->getId(), $siteTagGroupIds)) {
+                                if (!\in_array($TagGroup->getId(), $siteTagGroupIds)) {
                                     $siteTagGroupIds[] = $TagGroup->getId();
                                 }
                             }
 
-                            $Edit->setAttribute('quiqqer.tags.tagGroups', implode(',', $siteTagGroupIds));
+                            $Edit->setAttribute('quiqqer.tags.tagGroups', \implode(',', $siteTagGroupIds));
                             $Edit->save(QUI::getUsers()->getSystemUser());
                         }
                     }
@@ -322,12 +322,12 @@ class Crons
                         $tagsToProducts[$productId][$lang] = [];
                     }
 
-                    $tagsToProducts[$productId][$lang] = array_merge(
+                    $tagsToProducts[$productId][$lang] = \array_merge(
                         $tagsToProducts[$productId][$lang],
                         $tags
                     );
 
-                    $tagsToProducts[$productId][$lang] = array_unique($tagsToProducts[$productId][$lang]);
+                    $tagsToProducts[$productId][$lang] = \array_unique($tagsToProducts[$productId][$lang]);
                 }
             }
         }
@@ -390,7 +390,7 @@ class Crons
                 }
 
                 // determine deletion candidates
-                $deleteTagGroupIds = array_diff(
+                $deleteTagGroupIds = \array_diff(
                     $tagGroupIds,
                     $tagsGroupIdsNew[$lang][$projectName]
                 );
