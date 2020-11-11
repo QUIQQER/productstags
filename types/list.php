@@ -1,6 +1,5 @@
 <?php
 
-use \QUI\ERP\Products;
 use \QUI\ERP\Products\Controls\Category\ProductList;
 
 $tags = $Site->getAttribute('quiqqer.productstags.tags');
@@ -21,7 +20,7 @@ $ProductList = new ProductList([
         'tags' => explode(',', $tags)
     ],
     'autoload'       => false,
-    'view'           => Products\Utils\Search::getViewParameterFromRequest(),
+    'view'           => QUI\ERP\Products\Search\Utils::getViewParameterFromRequest(),
     'autoloadAfter'  => false
 ]);
 

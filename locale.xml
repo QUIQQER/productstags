@@ -4,8 +4,8 @@
     <groups name="quiqqer/productstags" datatype="php,js">
 
         <locale name="package.title">
-            <de><![CDATA[QUIQQER - Shop - Produkttags]]></de>
-            <en><![CDATA[QUIQQER - Shop - Producttags]]></en>
+            <de><![CDATA[QUIQQER - Shop - Produkt Tags]]></de>
+            <en><![CDATA[QUIQQER - Shop - Product Tags]]></en>
         </locale>
         <locale name="package.description" html="true">
             <de><![CDATA[
