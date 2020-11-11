@@ -1,49 +1,40 @@
-Tag erweiterung für Produkte
+![QUIQQER Products Tags](bin/images/Readme.jpg)
+
+QUIQQER Products Tags
 ========
 
-Erweitert Produkte um Tags
+Extend your QUIQQER Shop products by an extensive tag functionality. Assign tags and let your users filter products by them!
 
-Paketname:
+Package name:
 
-    quiqqer/productstags
+    quqiqer/productstags
 
-
-Features (Funktionen)
+Features
 --------
 
-- Tag Feld für Produkte
-- Crons für Tagverwaltung
-- Produkte Tag Suche
-- Produkte Tag Controls
+* New product field (type): Tags - Assign tags to your products
+* New site type: Tag list - Present a product list based on specific tags
+* Automatically create products tags based on product attribute list properties
+* Set up your product list sites to show tag filters
 
 Installation
 ------------
 
-Der Paketname ist: quiqqer/productstags
+The package name: quqiqer/productstags
 
-
-Mitwirken
+Contribution
 ----------
 
-- Issue Tracker: https://dev.quiqqer.com/quiqqer/productstags/issues
-- Source Code: https://dev.quiqqer.com/quiqqer/productstags/tree/master
-
+- Issue Tracker: https://dev.quiqqer.com/quqiqer/productstags/issues
+- Source Code: https://dev.quiqqer.com/quqiqer/productstags/tree/master
 
 Support
 -------
 
-Falls Sie ein Fehler gefunden haben, oder Verbesserungen wünschen,
-dann können Sie gerne an support@pcsg.de eine E-Mail schreiben.
+If you have found a bug, or want improvements,
+then you are welcome to send an e-mail to support@pcsg.de
 
-
-Lizenz
+Licence
 -------
 
-
-
-Entwickler
---------
-
-
-Events
-======
+GPL-3.0+

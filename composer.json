@@ -1,29 +1,29 @@
 {
-    "name": "quiqqer\/productstags",
-    "type": "quiqqer-module",
-    "description": "",
-    "license": "",
-    "authors": [
-        {
-            "name": "Henning Leutz",
-            "email": "leutz@pcsg.de",
-            "homepage": "http:\/\/www.pcsg.de",
-            "role": "Developer"
-        }
-    ],
-    "support": {
-        "email": "support@pcsg.de",
-        "url": "http:\/\/www.pcsg.de"
-    },
-    "require": {
-        "quiqqer\/quiqqer": "*@dev",
-        "quiqqer\/bricks": "*@dev",
-        "quiqqer\/products": "*@dev",
-        "quiqqer\/tags": ">=0.11|dev-master|dev-dev"
-    },
-    "autoload": {
-        "psr-4": {
-            "QUI\\ERP\\Tags\\": "src\/QUI\/ERP\/Tags\/"
-        }
+  "name": "quiqqer\/productstags",
+  "type": "quiqqer-module",
+  "description": "Implements a tag system for products and enables product search filtering by tags.",
+  "license": "GPL-3.0+",
+  "authors": [
+    {
+      "name": "Henning Leutz",
+      "email": "leutz@pcsg.de",
+      "homepage": "https:\/\/www.pcsg.de",
+      "role": "Developer"
     }
+  ],
+  "support": {
+    "email": "support@pcsg.de",
+    "url": "https:\/\/www.pcsg.de"
+  },
+  "require": {
+    "quiqqer\/quiqqer": "^1.5|*@dev",
+    "quiqqer\/bricks": "^1.2|*@dev",
+    "quiqqer\/products": "^1.2|*@dev",
+    "quiqqer\/tags": "^1.1|dev-master|dev-dev"
+  },
+  "autoload": {
+    "psr-4": {
+      "QUI\\ERP\\Tags\\": "src\/QUI\/ERP\/Tags\/"
+    }
+  }
 }
