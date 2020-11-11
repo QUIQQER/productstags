@@ -2,6 +2,7 @@
   "name": "quiqqer\/productstags",
   "type": "quiqqer-module",
   "description": "Implements a tag system for products and enables product search filtering by tags.",
+  "version": "1.0.0",
   "license": "GPL-3.0+",
   "authors": [
     {
