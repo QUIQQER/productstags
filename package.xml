@@ -2,26 +2,26 @@
     <package>
 
         <title>
-            <locale group="quqiqer/productstags" var="package.title"/>
+            <locale group="quiqqer/productstags" var="package.title"/>
         </title>
 
         <description>
-            <locale group="quqiqer/productstags" var="package.description"/>
+            <locale group="quiqqer/productstags" var="package.description"/>
         </description>
 
-        <image src="URL_OPT_DIR/quqiqer/productstags/bin/images/Logo.jpg"/>
+        <image src="URL_OPT_DIR/quiqqer/productstags/bin/images/Logo.jpg"/>
 
         <preview>
-            <image src="URL_OPT_DIR/quqiqer/productstags/bin/images/preview/Frontend_TagFilter.png"/>
-            <image src="URL_OPT_DIR/quqiqer/productstags/bin/images/preview/Backend_Product.png"/>
+            <image src="URL_OPT_DIR/quiqqer/productstags/bin/images/preview/Frontend_TagFilter.png"/>
+            <image src="URL_OPT_DIR/quiqqer/productstags/bin/images/preview/Backend_Product.png"/>
         </preview>
 
         <support>
             <email><![CDATA[support@pcsg.de]]></email>
             <forum><![CDATA[https://community.quiqqer.com]]></forum>
-            <source><![CDATA[https://dev.quiqqer.com/quqiqer/productstags]]></source>
-            <issues><![CDATA[https://dev.quiqqer.com/quqiqer/productstags/issues]]></issues>
-            <wiki><![CDATA[https://dev.quiqqer.com/quqiqer/productstags/wikis/home]]></wiki>
+            <source><![CDATA[https://dev.quiqqer.com/quiqqer/productstags]]></source>
+            <issues><![CDATA[https://dev.quiqqer.com/quiqqer/productstags/issues]]></issues>
+            <wiki><![CDATA[https://dev.quiqqer.com/quiqqer/productstags/wikis/home]]></wiki>
         </support>
 
         <copyright>

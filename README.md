@@ -7,7 +7,7 @@ Extend your QUIQQER Shop products by an extensive tag functionality. Assign tags
 
 Package name:
 
-    quqiqer/productstags
+    quiqqer/productstags
 
 Features
 --------
@@ -20,13 +20,13 @@ Features
 Installation
 ------------
 
-The package name: quqiqer/productstags
+The package name: quiqqer/productstags
 
 Contribution
 ----------
 
-- Issue Tracker: https://dev.quiqqer.com/quqiqer/productstags/issues
-- Source Code: https://dev.quiqqer.com/quqiqer/productstags/tree/master
+- Issue Tracker: https://dev.quiqqer.com/quiqqer/productstags/issues
+- Source Code: https://dev.quiqqer.com/quiqqer/productstags/tree/master
 
 Support
 -------
