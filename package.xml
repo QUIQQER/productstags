@@ -9,7 +9,7 @@
             <locale group="quiqqer/productstags" var="package.description"/>
         </description>
 
-        <image src="URL_OPT_DIR/quiqqer/productstags/bin/images/Logo.jpg"/>
+        <image src="URL_OPT_DIR/quiqqer/productstags/bin/images/Logo.png"/>
 
         <preview>
             <image src="URL_OPT_DIR/quiqqer/productstags/bin/images/preview/Frontend_TagFilter.png"/>
