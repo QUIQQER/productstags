@@ -32,16 +32,24 @@ class FieldFrontendView extends QUI\ERP\Products\Field\View
         $title = \htmlspecialchars($this->getTitle());
         $lang  = QUI::getLocale()->getCurrent();
 
+        $TagManager = new \QUI\Tags\Manager(QUI::getRewrite()->getProject());
+
         if (\is_array($value) && isset($value[$lang])) {
             foreach ($value[$lang] as $tag) {
-                $tagHtml .= '<div class="qui-tags-tag">'.$tag['tag'].'</div>';
+                try {
+                    $tagData = $TagManager->get($tag['tag']);
+                } catch (QUI\Exception $Exception) {
+                    continue;
+                }
+
+                $tagHtml .= '<div class="qui-tags-tag">'.$tagData['title'].'</div>';
             }
         }
 
         return '<div class="quiqqer-product-field" 
             data-qui="package/quiqqer/productstags/bin/controls/frontend/FieldFrontendView"
         >
-            <div class="quiqqer-product-field-title">'.$title.'</div>
+            <div class="quiqqer-product-field-title">'.$title.'</div>  
             <div class="quiqqer-product-field-value">'.$tagHtml.'</div>
         </div>';
     }
