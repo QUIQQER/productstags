@@ -120,12 +120,15 @@ class Crons
         $Locale = new QUI\Locale();
 
         // remove all generated tags from products
-        $products = Products::getProducts();
+        $productIds = Products::getProductIds();
 
         Products::disableGlobalProductSearchCacheUpdate();
 
         /** @var QUI\ERP\Products\Product\Product $Product */
-        foreach ($products as $Product) {
+        foreach ($productIds as $productId) {
+            \set_time_limit(QUI\ERP\Products\Crons::PRODUCT_CACHE_UPDATE_TIME);
+
+            $Product   = Products::getProduct($productId);
             $tagFields = $Product->getFieldsByType(QUI\ERP\Tags\Field::TYPE);
 
             /** @var QUI\ERP\Tags\Field $TagField */
