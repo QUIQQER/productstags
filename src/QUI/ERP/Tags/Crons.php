@@ -296,7 +296,7 @@ class Crons
                     foreach ($tags as $k => $tagName) {
                         $i = 0;
 
-                        foreach ($tagsPerAttributeGroupField[$fieldId] as $valueId => $tags) {
+                        foreach ($tagsPerAttributeGroupField[$fieldId] as $valueId => $tagsPerAttributeEntry) {
                             if ($i++ === $k) {
                                 $tagsPerAttributeGroupField[$fieldId][$valueId][$lang] = $tagName;
                             }
