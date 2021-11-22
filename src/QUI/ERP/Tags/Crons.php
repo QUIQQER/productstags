@@ -63,6 +63,12 @@ class Crons
         self::createSitesToProductTagsCache();
     }
 
+    /**
+     * Determines all product tags of a product category site and saves this data in a database table
+     *
+     * @return void
+     * @throws QUI\Exception
+     */
     protected static function createSitesToProductTagsCache()
     {
         $Project  = QUI::getProjectManager()->getStandard();
