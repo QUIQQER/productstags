@@ -19,8 +19,9 @@ use QUI\ERP\Products\Handler\Categories;
  */
 class Crons
 {
-    const TBL_PRODUCTS_2_TAGS = 'products_to_tags';
-    const TBL_TAGS_2_PRODUCTS = 'tags_to_products';
+    const TBL_PRODUCTS_2_TAGS       = 'products_to_tags';
+    const TBL_TAGS_2_PRODUCTS       = 'tags_to_products';
+    const TBL_SITES_TO_PRODUCT_TAGS = 'sites_to_product_tags';
 
     /**
      * Tag generator value for product tags
@@ -57,6 +58,124 @@ class Crons
 
         foreach ($productIds as $productId) {
             ProductEvents::onProductSave(Products::getProduct($productId));
+        }
+
+        self::createSitesToProductTagsCache();
+    }
+
+    protected static function createSitesToProductTagsCache()
+    {
+        $Project  = QUI::getProjectManager()->getStandard();
+        $langs    = $Project->getLanguages();
+        $DataBase = QUI::getDataBase();
+
+        // empty tables
+        foreach ($langs as $l) {
+            $LangProject = QUI::getProject($Project->getName(), $l);
+
+            $tblProducts2Tags      = QUI::getDBProjectTableName(self::TBL_PRODUCTS_2_TAGS, $LangProject);
+            $tblSitesToProductTags = QUI::getDBProjectTableName(self::TBL_SITES_TO_PRODUCT_TAGS, $LangProject);
+
+            $Statement = $DataBase->getPDO()->prepare('TRUNCATE TABLE '.$tblSitesToProductTags.';');
+            $Statement->execute();
+
+            $productCategorySiteIds = $LangProject->getSitesIds([
+                'where' => [
+                    'type' => 'quiqqer/products:types/category'
+                ]
+            ]);
+
+            foreach ($productCategorySiteIds as $entry) {
+                $categorySiteId     = $entry['id'];
+                $siteProductTags    = [];
+                $productCategoryIds = [];
+
+                try {
+                    $Site = $LangProject->get($categorySiteId);
+
+                    $mainProductCategoryId = $Site->getAttribute('quiqqer.products.settings.categoryId');
+
+                    if (\is_numeric($mainProductCategoryId)) {
+                        $productCategoryIds[] = $mainProductCategoryId;
+                    }
+
+                    $extraProductCategoryIds = $Site->getAttribute('quiqqer.products.settings.extraProductCategories');
+
+                    if (!empty($extraProductCategoryIds)) {
+                        $extraProductCategoryIds = \explode(',', $extraProductCategoryIds);
+
+                        $extraProductCategoryIds = array_map(function ($categoryId) {
+                            return (int)$categoryId;
+                        }, $extraProductCategoryIds);
+
+                        $productCategoryIds = \array_merge($productCategoryIds, $extraProductCategoryIds);
+                    }
+
+                    $productCategoryIds = \array_values(\array_unique($productCategoryIds));
+
+                    if (empty($productCategoryIds)) {
+                        continue;
+                    }
+
+                    foreach ($productCategoryIds as $categoryId) {
+                        $ProductCategory = Categories::getCategory($categoryId);
+                        $productIds      = $ProductCategory->getProductIds();
+
+                        if (empty($productIds)) {
+                            continue;
+                        }
+
+                        // Fetch all tags
+                        $result = QUI::getDataBase()->fetch([
+                            'select' => [
+                                'tags'
+                            ],
+                            'from'   => $tblProducts2Tags,
+                            'where'  => [
+                                'id'   => [
+                                    'type'  => 'IN',
+                                    'value' => $productIds
+                                ],
+                                'tags' => [
+                                    'type'  => 'NOT',
+                                    'value' => null
+                                ]
+                            ]
+                        ]);
+
+                        foreach ($result as $row) {
+                            $tags = \explode(',', $row['tags']);
+
+                            $tags = \array_filter($tags, function ($tag) {
+                                return !empty($tag);
+                            });
+
+                            $siteProductTags = \array_merge($siteProductTags, $tags);
+                        }
+                    }
+                } catch (\Exception $Exception) {
+                    QUI\System\Log::writeException($Exception);
+                    continue;
+                }
+
+                $siteProductTags = \array_values(\array_unique($siteProductTags));
+
+                if (empty($siteProductTags)) {
+                    continue;
+                }
+
+                try {
+                    QUI::getDataBase()->insert(
+                        $tblSitesToProductTags,
+                        [
+                            'id'   => $categorySiteId,
+                            'tags' => ','.\implode(',', $siteProductTags).','
+                        ]
+                    );
+                } catch (\Exception $Exception) {
+                    QUI\System\Log::writeException($Exception);
+                }
+            }
         }
     }
 
@@ -296,7 +415,7 @@ class Crons
                     foreach ($tags as $k => $tagName) {
                         $i = 0;
 
-                        foreach ($tagsPerAttributeGroupField[$fieldId] as $valueId => $tags) {
+                        foreach ($tagsPerAttributeGroupField[$fieldId] as $valueId => $tagsPerAttributeEntry) {
                             if ($i++ === $k) {
                                 $tagsPerAttributeGroupField[$fieldId][$valueId][$lang] = $tagName;
                             }

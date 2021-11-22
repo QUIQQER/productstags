@@ -8,6 +8,7 @@ namespace QUI\ERP\Tags;
 
 use QUI;
 use QUI\ERP\Products\Handler\Products;
+use QUI\Projects\Site;
 
 /**
  * Product Tags Manager
@@ -17,6 +18,38 @@ use QUI\ERP\Products\Handler\Products;
  */
 class Manager
 {
+    /**
+     * Get all (product) tags for a product category Site.
+     *
+     * @param Site $Site
+     * @return string[] - Internal tag names
+     *
+     * @throws QUI\Exception
+     */
+    public static function getTagsFromProductCategorySite(Site $Site): array
+    {
+        $result = QUI::getDataBase()->fetch([
+            'select' => [
+                'tags'
+            ],
+            'from'   => QUI::getDBProjectTableName(Crons::TBL_SITES_TO_PRODUCT_TAGS, $Site->getProject()),
+            'where'  => [
+                'id' => $Site->getId()
+            ],
+            'limit'  => 1
+        ]);
+
+        if (empty($result) || empty($result[0]['tags'])) {
+            return [];
+        }
+
+        $tags = \explode(',', $result[0]['tags']);
+
+        return \array_filter($tags, function ($tag) {
+            return !empty($tag);
+        });
+    }
+
     /**
      * Return all product ids that have specific tags assigned
      *
