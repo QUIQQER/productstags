@@ -54,7 +54,11 @@ class Crons
             $Statement->execute();
         }
 
-        $productIds = QUI\ERP\Products\Handler\Products::getProductIds();
+        $productIds = QUI\ERP\Products\Handler\Products::getProductIds([
+            'where' => [
+                'active' => 1
+            ]
+        ]);
 
         foreach ($productIds as $productId) {
             ProductEvents::onProductSave(Products::getProduct($productId));
@@ -125,7 +129,11 @@ class Crons
 
                     foreach ($productCategoryIds as $categoryId) {
                         $ProductCategory = Categories::getCategory($categoryId);
-                        $productIds      = $ProductCategory->getProductIds();
+                        $productIds      = $ProductCategory->getProductIds([
+                            'where' => [
+                                'active' => 1
+                            ]
+                        ]);
 
                         if (empty($productIds)) {
                             continue;
