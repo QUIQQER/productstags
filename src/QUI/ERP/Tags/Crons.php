@@ -274,6 +274,10 @@ class Crons
             $Product->save();
         }
 
+        // reset time limit
+        \set_time_limit(\ini_get('max_execution_time'));
+
+
         Products::enableGlobalProductSearchCacheUpdate();
 
         $tagsToProducts             = [];
