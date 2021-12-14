@@ -30,7 +30,7 @@ class Field extends Products\Field\Field
     /**
      * @var bool
      */
-    public $searchable = false;
+    public $searchable = true;
 
     /**
      * Tag Manager instanced by language
@@ -412,6 +412,45 @@ class Field extends Products\Field\Field
     {
         return new FieldFrontendView($this->getFieldDataForView());
     }
+
+    /**
+     * Return value for use in product search cache
+     *
+     * @param QUI\Locale|null $Locale
+     * @return string
+     */
+    public function getSearchCacheValue($Locale = null)
+    {
+        $val = $this->getValue();
+
+        if (empty($val)) {
+            return null;
+        }
+
+        $searchCacheValues = [];
+
+        foreach ($val as $lang => $langTags) {
+            try {
+                $TagManager = $this->getTagManager($lang);
+            } catch (\Exception $Exception) {
+                QUI\System\Log::writeException($Exception);
+                continue;
+            }
+
+            foreach ($langTags as $tagData) {
+                try {
+                    $tagResult           = $TagManager->get($tagData['tag']);
+                    $searchCacheValues[] = $tagResult['title'];
+                } catch (\Exception $Exception) {
+                    QUI\System\Log::writeDebugException($Exception);
+                }
+            }
+        }
+
+        return ','.\implode(',', $searchCacheValues).',';
+    }
+
+
 
 //    /**
 //     * Return the field data for a view
