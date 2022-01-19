@@ -335,7 +335,6 @@ class Crons
             $tags             = [];
             $tagTitlesByLang  = [];
             $tagsByLang       = [];
-            $tagList          = [];
             $fieldId          = $Field->getId();
             $isAttributeGroup = $Field instanceof QUI\ERP\Products\Field\Types\AttributeGroup;
 
@@ -344,6 +343,8 @@ class Crons
             }
 
             foreach ($options['entries'] as $entry) {
+                $image = !empty($entry['image']) ? $entry['image'] : false;
+
                 foreach ($entry['title'] as $lang => $text) {
                     if (empty($lang) || empty($text)) {
                         continue;
@@ -353,8 +354,10 @@ class Crons
                         $tagsPerField[$fieldId][$lang] = [];
                     }
 
-                    $tagTitlesByLang[$lang][] = $text;
-                    $tagList[]                = $text;
+                    $tagTitlesByLang[$lang][] = [
+                        'title' => $text,
+                        'image' => $image
+                    ];
                 }
 
                 if ($isAttributeGroup) {
@@ -362,7 +365,7 @@ class Crons
                 }
             }
 
-            foreach ($tagTitlesByLang as $lang => $tagTitles) {
+            foreach ($tagTitlesByLang as $lang => $tagEntries) {
                 $tagGroups = $fieldTagGroups[$lang];
 
                 if (!isset($tagsByLang[$lang])) {
@@ -383,7 +386,7 @@ class Crons
                         }
                     }
 
-                    $tags        = self::addTagsToProject($Project, $tagTitles);
+                    $tags        = self::addTagsToProject($Project, $tagEntries);
                     $categoryIds = Categories::getCategoryIds();
 
                     /** @var QUI\ERP\Products\Category\Category $Category */
@@ -562,31 +565,36 @@ class Crons
      * Adds a tag to a project
      *
      * @param QUI\Projects\Project $Project
-     * @param array $tagTitles - tag titles
+     * @param array $tagEntries - tag titles
      *
      * @return array - tag names
      */
-    protected static function addTagsToProject($Project, $tagTitles)
+    protected static function addTagsToProject($Project, array $tagEntries)
     {
         $TagManager = new QUI\Tags\Manager($Project);
         $tagNames   = [];
 
         try {
-            foreach ($tagTitles as $tagTitle) {
+            foreach ($tagEntries as $tagEntry) {
+                $tagTitle = $tagEntry['title'];
+
                 if ($TagManager->existsTagTitle($tagTitle)) {
                     $tag        = $TagManager->getByTitle($tagTitle);
                     $tagNames[] = $tag['tag'];
                     continue;
                 }
 
-                $tagNames[] = $TagManager->add(
-                    $tagTitle,
-                    [
-                        'title'     => $tagTitle,
-                        'generator' => self::TAG_GENERATOR,
-                        'generated' => 1
-                    ]
-                );
+                $tagCreateData = [
+                    'title'     => $tagTitle,
+                    'generator' => self::TAG_GENERATOR,
+                    'generated' => 1
+                ];
+
+                if ($tagEntry['image']) {
+                    $tagCreateData['image'] = $tagEntry['image'];
+                }
+
+                $tagNames[] = $TagManager->add($tagTitle, $tagCreateData);
             }
         } catch (\Exception $Exception) {
             QUI\System\Log::addError(
