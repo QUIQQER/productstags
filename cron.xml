@@ -8,6 +8,11 @@
         <description>
             <locale group="quiqqer/productstags" var="cron.createCache.description" />
         </description>
+
+        <autocreate>
+            <interval>0 1 * * 0</interval>
+            <active>1</active>
+        </autocreate>
     </cron>
 
     <cron exec="\QUI\ERP\Tags\Crons::generateProductAttributeListTags">
@@ -17,6 +22,11 @@
         <description>
             <locale group="quiqqer/productstags" var="cron.generateProductAttributeListTags.description" />
         </description>
+
+        <autocreate>
+            <interval>0 0 * * 0</interval>
+            <active>1</active>
+        </autocreate>
     </cron>
 
 </crons>
