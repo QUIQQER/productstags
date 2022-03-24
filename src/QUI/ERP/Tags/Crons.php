@@ -75,6 +75,8 @@ class Crons
      */
     protected static function createSitesToProductTagsCache()
     {
+        QUI\Watcher::$globalWatcherDisable = true;
+
         $Project  = QUI::getProjectManager()->getStandard();
         $langs    = $Project->getLanguages();
         $DataBase = QUI::getDataBase();
@@ -202,6 +204,8 @@ class Crons
     public static function generateProductAttributeListTags()
     {
 //        ini_set('display_errors', 1);
+
+        QUI\Watcher::$globalWatcherDisable = true;
 
         $fields = Fields::getFields([
             'where' => [
