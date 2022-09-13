@@ -2,4 +2,6 @@
 <events>
     <event on="onQuiqqerProductsProductSave" fire="\QUI\ERP\Tags\ProductEvents::onProductSave"/>
     <event on="onPackageSetup" fire="\QUI\ERP\Tags\Events::onPackageSetup"/>
+
+    <event on="onQuiqqerProductsProductCleanup" fire="\QUI\ERP\Tags\Events::onQuiqqerProductsProductCleanup"/>
 </events>

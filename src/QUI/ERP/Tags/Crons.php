@@ -199,9 +199,10 @@ class Crons
      * Generates tags for every entry in every product attribute list field
      * and assigns them to projects, products and product category sites
      *
+     * @param array $productIds (optional) - Fixed list of product ids
      * @throws QUI\Exception
      */
-    public static function generateProductAttributeListTags()
+    public static function generateProductAttributeListTags(array $productIds = []): void
     {
 //        ini_set('display_errors', 1);
 
@@ -309,12 +310,15 @@ class Crons
         $tagsPerField               = []; // only applied when parsing $Field of type AttributeGroup
         $tagsPerAttributeGroupField = [];
 
-        $productIdsQuery = "SELECT `id` FROM ".QUI\ERP\Products\Utils\Tables::getProductTableName();
-        $productIdsQuery .= " WHERE (`fieldData` LIKE '%\"type\":\"".Fields::TYPE_ATTRIBUTE_GROUPS."\"%'";
-        $productIdsQuery .= " OR `fieldData` LIKE '%\"type\":\"".Fields::TYPE_ATTRIBUTE_LIST."\"%')";
-        $productIdsQuery .= " AND `active` = 1";
+        if (empty($productIds)) {
+            $productIdsQuery = "SELECT `id` FROM ".QUI\ERP\Products\Utils\Tables::getProductTableName();
+            $productIdsQuery .= " WHERE (`fieldData` LIKE '%\"type\":\"".Fields::TYPE_ATTRIBUTE_GROUPS."\"%'";
+            $productIdsQuery .= " OR `fieldData` LIKE '%\"type\":\"".Fields::TYPE_ATTRIBUTE_LIST."\"%')";
+            $productIdsQuery .= " AND `active` = 1";
 
-        $productIds        = QUI::getDataBase()->fetchSQL($productIdsQuery);
+            $productIds = QUI::getDataBase()->fetchSQL($productIdsQuery);
+        }
+
         $fieldIdsProcessed = [];
 
         foreach ($productIds as $row) {

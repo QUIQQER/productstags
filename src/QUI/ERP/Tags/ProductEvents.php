@@ -8,6 +8,7 @@ namespace QUI\ERP\Tags;
 
 use QUI;
 use QUI\ERP\Products;
+use QUI\ERP\Products\Handler\Fields;
 
 /**
  * Event handling for product events
@@ -17,6 +18,25 @@ use QUI\ERP\Products;
  */
 class ProductEvents
 {
+    /**
+     * quiqqer/products: onQuiqqerProductsProductCleanup
+     *
+     * @return void
+     */
+    public static function onQuiqqerProductsProductCleanup(): void
+    {
+        $productIdsQuery = "SELECT `id` FROM ".QUI\ERP\Products\Utils\Tables::getProductTableName();
+        $productIdsQuery .= " WHERE `fieldData` NOT LIKE '%\"type\":\"".Fields::TYPE_ATTRIBUTE_GROUPS."\"%'";
+        $productIdsQuery .= " AND `fieldData` NOT LIKE '%\"type\":\"".Fields::TYPE_ATTRIBUTE_LIST."\"%'";
+        $productIdsQuery .= " AND `active` = 1";
+
+        try {
+            Crons::generateProductAttributeListTags(\array_column($productIdsQuery, 'id'));
+        } catch (\Exception $Exception) {
+            QUI\System\Log::writeException($Exception);
+        }
+    }
+
     /**
      * @param Products\Product\Model $Product
      * @throws QUI\Exception
