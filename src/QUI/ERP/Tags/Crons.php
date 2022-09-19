@@ -204,30 +204,22 @@ class Crons
      */
     public static function generateProductAttributeListTags(array $productIds = []): void
     {
-//        ini_set('display_errors', 1);
+        // Disable specific procedures for mass tasks
+        Products::disableGlobalProductSearchCacheUpdate();
+        Products::disableGlobalFireEventsOnProductSave();
 
         QUI\Watcher::$globalWatcherDisable = true;
 
         // Get last execution date of this cron
-        $LastCronExecDate = \date_create('1970-01-01 00:00:00');
+        $considerCronExecDate = empty($productIds);
+        $LastCronExecDate     = \date_create('1970-01-01 00:00:00');
 
-        $result = QUI::getDataBase()->fetch([
-            'select' => 'id',
-            'from'   => QUI\Cron\Manager::table(),
-            'where'  => [
-                'exec' => '\QUI\ERP\Tags\Crons::generateProductAttributeListTags'
-            ],
-            'limit'  => 1
-        ]);
-
-        if (!empty($result)) {
-            $cronId = $result[0]['id'];
-
+        if ($considerCronExecDate) {
             $result = QUI::getDataBase()->fetch([
                 'select' => 'lastexec',
-                'from'   => QUI\Cron\Manager::tableHistory(),
+                'from'   => QUI\Cron\Manager::table(),
                 'where'  => [
-                    'cronid' => $cronId
+                    'exec' => '\QUI\ERP\Tags\Crons::generateProductAttributeListTags'
                 ],
                 'limit'  => 1
             ]);
@@ -251,6 +243,7 @@ class Crons
 
                 if (!isset($tagGroupIdsCurrent[$l])) {
                     $tagGroupIdsCurrent[$l] = [];
+
                 }
 
                 $tagGroupIdsCurrent[$l][$Project->getName()] = TagGroupsHandler::getGroupIds(
@@ -276,10 +269,6 @@ class Crons
         }
 
         $Locale = new QUI\Locale();
-
-        // Disable specific procedures for mass tasks
-//        Products::disableGlobalProductSearchCacheUpdate();
-        Products::disableGlobalFireEventsOnProductSave();
 
         // remove all generated tags from products
 //        $productIds = Products::getProductIds();
@@ -317,14 +306,14 @@ class Crons
             $productIdsQuery .= " AND `active` = 1";
 
             $productIds = QUI::getDataBase()->fetchSQL($productIdsQuery);
+            $productIds = \array_column($productIds, 'id');
         }
 
         $fieldIdsProcessed = [];
 
-        foreach ($productIds as $row) {
-            $productId = $row['id'];
-            $Product   = Products::getProduct($productId);
-            $fields    = \array_merge(
+        foreach ($productIds as $productId) {
+            $Product = Products::getProduct($productId);
+            $fields  = \array_merge(
                 $Product->getFieldsByType(Fields::TYPE_ATTRIBUTE_GROUPS),
                 $Product->getFieldsByType(Fields::TYPE_ATTRIBUTE_LIST)
             );
@@ -333,7 +322,7 @@ class Crons
             foreach ($fields as $Field) {
                 $EditDate = \date_create($Field->getAttribute('e_date'));
 
-                if ($EditDate <= $LastCronExecDate) {
+                if ($considerCronExecDate && $EditDate <= $LastCronExecDate) {
                     continue;
                 }
 
@@ -586,8 +575,12 @@ class Crons
                     $ProductField->removeTags($lang, self::TAG_GENERATOR);
                     $ProductField->addTags($t, $lang, self::TAG_GENERATOR);
                 }
+            }
 
+            try {
                 $Product->save();
+            } catch (\Exception $Exception) {
+                QUI\System\Log::writeException($Exception);
             }
         }
 
