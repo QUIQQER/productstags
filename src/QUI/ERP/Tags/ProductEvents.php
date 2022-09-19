@@ -39,11 +39,14 @@ class ProductEvents
 
     /**
      * @param Products\Product\Model $Product
+     * @param bool $generateAttributeListTags (optional)
      * @throws QUI\Exception
      */
-    public static function onProductSave($Product)
+    public static function onProductSave($Product, bool $generateAttributeListTags = true)
     {
-        Crons::generateProductAttributeListTags([$Product->getId()]);
+        if ($generateAttributeListTags) {
+            Crons::generateProductAttributeListTags([$Product->getId()]);
+        }
 
         $tagFields   = $Product->getFieldsByType(Field::TYPE);
         $pId         = $Product->getId();
