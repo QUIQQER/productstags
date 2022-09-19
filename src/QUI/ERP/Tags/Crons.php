@@ -245,7 +245,6 @@ class Crons
 
                 if (!isset($tagGroupIdsCurrent[$l])) {
                     $tagGroupIdsCurrent[$l] = [];
-
                 }
 
                 $tagGroupIdsCurrent[$l][$Project->getName()] = TagGroupsHandler::getGroupIds(
