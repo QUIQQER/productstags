@@ -43,6 +43,8 @@ class ProductEvents
      */
     public static function onProductSave($Product)
     {
+        Crons::generateProductAttributeListTags([$Product->getId()]);
+
         $tagFields   = $Product->getFieldsByType(Field::TYPE);
         $pId         = $Product->getId();
         $productTags = [];
