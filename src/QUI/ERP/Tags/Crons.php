@@ -54,14 +54,16 @@ class Crons
             $Statement->execute();
         }
 
-        $productIds = QUI\ERP\Products\Handler\Products::getProductIds([
-            'where' => [
+        $productIds = QUI::getDataBase()->fetch([
+            'select' => 'id',
+            'from'   => QUI\ERP\Products\Utils\Tables::getProductTableName(),
+            'where'  => [
                 'active' => 1
             ]
         ]);
 
         foreach ($productIds as $productId) {
-            ProductEvents::onProductSave(Products::getProduct($productId));
+            ProductEvents::onProductSave(Products::getProduct($productId), false);
         }
 
         self::createSitesToProductTagsCache();
