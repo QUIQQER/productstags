@@ -9,6 +9,7 @@ namespace QUI\ERP\Tags;
 use QUI;
 use QUI\ERP\Products;
 use QUI\ERP\Products\Handler\Fields;
+use QUI\ERP\Products\Handler\Products as ProductsHandler;
 
 /**
  * Event handling for product events
@@ -44,8 +45,22 @@ class ProductEvents
      */
     public static function onProductSave($Product, bool $generateAttributeListTags = true)
     {
+        /*
+         * Remember flags for firing onProductSave and writing products cache table
+         */
+        $fireEventsFlag        = ProductsHandler::$fireEventsOnProductSave;
+        $searchCacheUpdateFlag = ProductsHandler::$updateProductSearchCache;
+
         if ($generateAttributeListTags) {
             Crons::generateProductAttributeListTags([$Product->getId()]);
+        }
+
+        if ($fireEventsFlag) {
+            ProductsHandler::enableGlobalFireEventsOnProductSave();
+        }
+
+        if ($searchCacheUpdateFlag) {
+            ProductsHandler::enableGlobalProductSearchCacheUpdate();
         }
 
         $tagFields   = $Product->getFieldsByType(Field::TYPE);
