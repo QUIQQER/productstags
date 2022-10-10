@@ -216,7 +216,9 @@ class Crons
         Products::disableGlobalProductSearchCacheUpdate();
         Products::disableGlobalFireEventsOnProductSave();
 
-        QUI\Watcher::$globalWatcherDisable = true;
+        if (\class_exists('\\QUI\\Watcher')) {
+            QUI\Watcher::$globalWatcherDisable = true;
+        }
 
         // Get last execution date of this cron
         $considerCronExecDate = empty($productIds);
