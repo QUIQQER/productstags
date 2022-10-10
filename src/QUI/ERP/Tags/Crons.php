@@ -62,8 +62,14 @@ class Crons
             ]
         ]);
 
+        $productIds = \array_column($productIds, 'id');
+
         foreach ($productIds as $productId) {
-            ProductEvents::onProductSave(Products::getProduct($productId), false);
+            try {
+                ProductEvents::onProductSave(Products::getProduct($productId), false);
+            } catch (QUI\Exception $Exception) {
+                QUI\System\Log::writeException($Exception);
+            }
         }
 
         self::createSitesToProductTagsCache();
