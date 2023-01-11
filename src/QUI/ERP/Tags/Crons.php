@@ -321,8 +321,6 @@ class Crons
 
         $fieldIdsProcessed = [];
 
-        $productIds = [29932];
-
         foreach ($productIds as $productId) {
             $Product = Products::getProduct($productId);
             $fields  = \array_merge(
@@ -562,8 +560,6 @@ class Crons
                 }
             }
         }
-
-        \QUI\System\Log::writeRecursive($tagsToProducts);
 
         // Set tags to products
         foreach ($tagsToProducts as $productId => $tags) {
