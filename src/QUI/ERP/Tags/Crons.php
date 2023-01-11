@@ -541,7 +541,7 @@ class Crons
             $Product       = Products::getProduct($productId);
             $forbiddenTags = [];
 
-            if ($Product->getType() === QUI\ERP\Products\Product\Types\VariantChild::class) {
+//            if ($Product->getType() === QUI\ERP\Products\Product\Types\VariantChild::class) {
                 /**
                  * Determine tags that should NOT be added. This is the case if the product has
                  * a field of type AttributeGroup and has only selected one or less than all entries
@@ -564,7 +564,7 @@ class Crons
                         }
                     }
                 }
-            }
+//            }
 
             // Add tags to the product
             $tagFields = $Product->getFieldsByType(QUI\ERP\Tags\Field::TYPE);
