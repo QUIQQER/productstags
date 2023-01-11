@@ -542,28 +542,28 @@ class Crons
             $forbiddenTags = [];
 
 //            if ($Product->getType() === QUI\ERP\Products\Product\Types\VariantChild::class) {
-                /**
-                 * Determine tags that should NOT be added. This is the case if the product has
-                 * a field of type AttributeGroup and has only selected one or less than all entries
-                 * from that field as its value.
-                 */
-                /** @var QUI\ERP\Products\Field\Types\AttributeGroup $AttributeGroupField */
-                foreach ($Product->getFieldsByType(Fields::TYPE_ATTRIBUTE_GROUPS) as $AttributeGroupField) {
-                    $productValueId = $AttributeGroupField->getValue();
-                    $fieldId        = $AttributeGroupField->getId();
+            /**
+             * Determine tags that should NOT be added. This is the case if the product has
+             * a field of type AttributeGroup and has only selected one or less than all entries
+             * from that field as its value.
+             */
+            /** @var QUI\ERP\Products\Field\Types\AttributeGroup $AttributeGroupField */
+            foreach ($Product->getFieldsByType(Fields::TYPE_ATTRIBUTE_GROUPS) as $AttributeGroupField) {
+                $productValueId = $AttributeGroupField->getValue();
+                $fieldId        = $AttributeGroupField->getId();
 
-                    if (!isset($tagsPerAttributeGroupField[$fieldId])) {
-                        continue;
-                    }
+                if (!isset($tagsPerAttributeGroupField[$fieldId])) {
+                    continue;
+                }
 
-                    foreach ($tagsPerAttributeGroupField[$fieldId] as $valueId => $valueTags) {
-                        if ($valueId != $productValueId) {
-                            foreach ($valueTags as $valueLang => $valueTag) {
-                                $forbiddenTags[$valueLang][] = $valueTag;
-                            }
+                foreach ($tagsPerAttributeGroupField[$fieldId] as $valueId => $valueTags) {
+                    if ($valueId != $productValueId) {
+                        foreach ($valueTags as $valueLang => $valueTag) {
+                            $forbiddenTags[$valueLang][] = $valueTag;
                         }
                     }
                 }
+            }
 //            }
 
             // Add tags to the product
