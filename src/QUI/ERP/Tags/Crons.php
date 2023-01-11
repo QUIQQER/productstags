@@ -11,6 +11,7 @@ use QUI\ERP\Products\Handler\Products;
 use QUI\ERP\Products\Handler\Fields;
 use QUI\Tags\Groups\Handler as TagGroupsHandler;
 use QUI\ERP\Products\Handler\Categories;
+use function array_merge;
 
 /**
  * Crons for product tags
@@ -320,6 +321,8 @@ class Crons
 
         $fieldIdsProcessed = [];
 
+        $productIds = [29932];
+
         foreach ($productIds as $productId) {
             $Product = Products::getProduct($productId);
             $fields  = \array_merge(
@@ -424,6 +427,8 @@ class Crons
                         }
                     }
 
+                    /// POSSIBLE CUT
+
                     foreach ($tagTitlesByLang as $lang => $tagEntries) {
                         $tagGroups = $fieldTagGroups[$lang];
 
@@ -445,8 +450,9 @@ class Crons
                                 }
                             }
 
-                            $tags        = self::addTagsToProject($Project, $tagEntries);
-                            $categoryIds = Categories::getCategoryIds();
+                            $tags              = self::addTagsToProject($Project, $tagEntries);
+                            $categoryIds       = Categories::getCategoryIds();
+                            $tagGroupIdsBySite = [];
 
                             /** @var QUI\ERP\Products\Category\Category $Category */
                             foreach ($categoryIds as $categoryId) {
@@ -460,7 +466,9 @@ class Crons
 
                                 /** @var QUI\Projects\Site $CategorySite */
                                 foreach ($sites as $CategorySite) {
-                                    $Edit            = $CategorySite->getEdit();
+                                    $Edit   = $CategorySite->getEdit();
+                                    $siteId = $Edit->getId();
+
                                     $siteTagGroupIds = $Edit->getAttribute('quiqqer.tags.tagGroups');
                                     $siteTagGroupIds = \explode(',', $siteTagGroupIds);
 
@@ -478,9 +486,26 @@ class Crons
                                         }
                                     }
 
-                                    $Edit->setAttribute('quiqqer.tags.tagGroups', \implode(',', $siteTagGroupIds));
-                                    $Edit->save(QUI::getUsers()->getSystemUser());
+                                    if (!isset($tagGroupIdsBySite[$siteId])) {
+                                        $tagGroupIdsBySite[$siteId] = [];
+                                    }
+
+                                    $tagGroupIdsBySite[$siteId] = array_merge(
+                                        $tagGroupIdsBySite[$siteId],
+                                        $siteTagGroupIds
+                                    );
+
+//                                    $Edit->setAttribute('quiqqer.tags.tagGroups', \implode(',', $siteTagGroupIds));
+//                                    $Edit->save(QUI::getUsers()->getSystemUser());
                                 }
+                            }
+
+                            // Assign tag group to Sites
+                            foreach ($tagGroupIdsBySite as $siteId => $siteTagGroupIds) {
+                                $Edit = new QUI\Projects\Site\Edit($Project, $siteId);
+
+                                $Edit->setAttribute('quiqqer.tags.tagGroups', \implode(',', $siteTagGroupIds));
+                                $Edit->save(QUI::getUsers()->getSystemUser());
                             }
                         }
 
@@ -513,6 +538,8 @@ class Crons
                         }
                     }
 
+                    /// POSSIBLE CUT END
+
                     $fieldIdsProcessed[$fieldId] = $tagsByLang;
                 }
 
@@ -535,6 +562,8 @@ class Crons
                 }
             }
         }
+
+        \QUI\System\Log::writeRecursive($tagsToProducts);
 
         // Set tags to products
         foreach ($tagsToProducts as $productId => $tags) {
