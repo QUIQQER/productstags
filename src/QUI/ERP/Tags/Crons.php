@@ -12,6 +12,7 @@ use QUI\ERP\Products\Handler\Fields;
 use QUI\Tags\Groups\Handler as TagGroupsHandler;
 use QUI\ERP\Products\Handler\Categories;
 use function array_merge;
+use function array_unique;
 
 /**
  * Crons for product tags
@@ -349,6 +350,8 @@ class Crons
             $fieldTagGroups = [];
             $generateTags   = !empty($options['generate_tags']);
 
+            \QUI\System\Log::writeRecursive("Field #$fieldId");
+
 //            if (empty($options['generate_tags'])) {
 //                continue;
 //            }
@@ -514,6 +517,8 @@ class Crons
                     // Assign tag group to Sites
                     foreach ($tagGroupIdsBySite as $siteId => $siteTagGroupIds) {
                         $Edit = new QUI\Projects\Site\Edit($Project, $siteId);
+
+                        $siteTagGroupIds = array_values(array_unique($siteTagGroupIds));
 
                         $Edit->setAttribute('quiqqer.tags.tagGroups', \implode(',', $siteTagGroupIds));
                         $Edit->save(QUI::getUsers()->getSystemUser());
