@@ -1,17 +1,22 @@
 <?php
 
-/**
- * This file contains \QUI\Tags\Cron
- */
-
 namespace QUI\ERP\Tags;
 
 use QUI;
 use QUI\ERP\Products\Handler\Products;
 use QUI\ERP\Products\Handler\Fields;
+use QUI\ERP\Products\Search\Utils as ProductSearchUtils;
 use QUI\Tags\Groups\Handler as TagGroupsHandler;
 use QUI\ERP\Products\Handler\Categories;
+
+use function array_column;
+use function array_diff;
 use function array_merge;
+use function array_unique;
+use function array_walk;
+use function explode;
+use function implode;
+use function in_array;
 
 /**
  * Crons for product tags
@@ -280,30 +285,8 @@ class Crons
 
         $Locale = new QUI\Locale();
 
-        // remove all generated tags from products
-//        $productIds = Products::getProductIds();
-//
-//        /** @var QUI\ERP\Products\Product\Product $Product */
-//        foreach ($productIds as $productId) {
-//            \set_time_limit(QUI\ERP\Products\Crons::PRODUCT_CACHE_UPDATE_TIME);
-//
-//            $Product   = Products::getProduct($productId);
-//            $tagFields = $Product->getFieldsByType(QUI\ERP\Tags\Field::TYPE);
-//
-//            /** @var QUI\ERP\Tags\Field $TagField */
-//            foreach ($tagFields as $TagField) {
-//                foreach ($langs as $lang) {
-//                    $TagField->removeTags($lang, self::TAG_GENERATOR);
-//                }
-//            }
-//
-//            $Product->save();
-//        }
-
         // reset time limit
         \set_time_limit(\ini_get('max_execution_time'));
-
-//        Products::enableGlobalProductSearchCacheUpdate();
 
         $tagsToProducts             = [];
         $tagsPerField               = []; // only applied when parsing $Field of type AttributeGroup
@@ -319,251 +302,294 @@ class Crons
             $productIds = \array_column($productIds, 'id');
         }
 
-        $fieldIdsProcessed = [];
+        // Determine which fields are already set as global search filters
+        // For these tags, tag groups are not automatically assigned to product category sites.
+        $ProductSearchConfig              = ProductSearchUtils::getConfig();
+        $defaultSearchFilterFieldsSetting = $ProductSearchConfig->get('search', 'frontend');
+        $defaultSearchFilterFieldIds      = [];
 
-        foreach ($productIds as $productId) {
-            $Product = Products::getProduct($productId);
-            $fields  = \array_merge(
-                $Product->getFieldsByType(Fields::TYPE_ATTRIBUTE_GROUPS),
-                $Product->getFieldsByType(Fields::TYPE_ATTRIBUTE_LIST)
-            );
+        if (!empty($defaultSearchFilterFieldsSetting)) {
+            $defaultSearchFilterFieldIds = explode(',', $defaultSearchFilterFieldsSetting);
 
-            /** @var QUI\ERP\Products\Field\Field $Field */
-            foreach ($fields as $Field) {
-                $EditDate = \date_create($Field->getAttribute('e_date'));
+            array_walk($defaultSearchFilterFieldIds, function (&$fieldId) {
+                $fieldId = (int)$fieldId;
+            });
+        }
 
-                if ($considerCronExecDate && $EditDate <= $LastCronExecDate) {
-                    continue;
-                }
+        // Fetch relevant fields
+        $fields = array_merge(
+            Fields::getFieldsByType(Fields::TYPE_ATTRIBUTE_GROUPS),        // de: "Attribut-Liste"
+            Fields::getFieldsByType(Fields::TYPE_ATTRIBUTE_LIST)   // de: "Auswahl-Liste"
+        );
 
-                $fieldId          = $Field->getId();
-                $options          = $Field->getOptions();
-                $fieldTagGroups   = [];
-                $generateTags     = !empty($options['generate_tags']);
-                $isFieldProcessed = isset($fieldIdsProcessed[$fieldId]);
+        /** @var QUI\ERP\Products\Field\Field $Field */
+        foreach ($fields as $Field) {
+            $EditDate = \date_create($Field->getAttribute('e_date'));
 
-//            if (empty($options['generate_tags'])) {
-//                continue;
-//            }
+            if ($considerCronExecDate && $EditDate <= $LastCronExecDate) {
+                continue;
+            }
 
-                if (!isset($options['entries'])) {
-                    QUI\System\Log::addWarning(
-                        'Cron :: generateProductAttributeListTags -> Could not find'
-                        .' product attribute list entries for field #'.$Field->getId()
+            $fieldId        = $Field->getId();
+            $options        = $Field->getOptions();
+            $fieldTagGroups = [];
+            $generateTags   = !empty($options['generate_tags']);
+
+            if (!$generateTags) {
+                continue;
+            }
+
+            if (!isset($options['entries'])) {
+                QUI\System\Log::addWarning(
+                    'Cron :: generateProductAttributeListTags -> Could not find'
+                    .' product attribute list entries for field #'.$Field->getId()
+                );
+
+                continue;
+            }
+
+            $tagsByLang = [];
+
+            // generate tag group for each language and project
+            foreach ($projects as $projectName) {
+                $Project      = QUI::getProject($projectName);
+                $projectLangs = $Project->getAttribute('langs');
+
+                foreach ($projectLangs as $l) {
+                    $Project = QUI::getProject($projectName, $l);
+
+                    $Locale->setCurrent($l);
+
+                    if (!isset($fieldTagGroups[$l])) {
+                        $fieldTagGroups[$l] = [];
+                    }
+
+                    $TagGroup = self::addTagGroupToProject(
+                        $Project,
+                        $Field->getTitle($Locale),
+                        $Field->getWorkingTitle($Locale)
                     );
 
-                    continue;
+                    $tagsGroupIdsNew[$l][$Project->getName()][] = $TagGroup->getId();
+
+                    // remove all tags generated by this scripts from tag group
+                    $TagGroup->removeTagsByGenerator(self::TAG_GENERATOR);
+
+                    $fieldTagGroups[$l][] = $TagGroup;
+                }
+            }
+
+            // generate tags
+            $tags             = [];
+            $tagTitlesByLang  = [];
+            $isAttributeGroup = $Field instanceof QUI\ERP\Products\Field\Types\AttributeGroup;
+
+            if ($isAttributeGroup) {
+                $tagsPerAttributeGroupField[$fieldId] = [];
+            }
+
+            foreach ($options['entries'] as $entry) {
+                $image = !empty($entry['image']) ? $entry['image'] : false;
+
+                foreach ($entry['title'] as $lang => $text) {
+                    if (empty($lang) || empty($text)) {
+                        continue;
+                    }
+
+                    $tagTitlesByLang[$lang][] = [
+                        'title' => $text,
+                        'image' => $image
+                    ];
                 }
 
-                $tagsByLang = [];
+                if ($isAttributeGroup) {
+                    $tagsPerAttributeGroupField[$fieldId][$entry['valueId']] = [];
+                }
+            }
 
-                if (isset($fieldIdsProcessed[$fieldId])) {
-                    $tagsByLang = $fieldIdsProcessed[$fieldId];
+            foreach ($tagTitlesByLang as $lang => $tagEntries) {
+                $tagGroups = $fieldTagGroups[$lang];
+
+                if (!isset($tagsByLang[$lang])) {
+                    $tagsByLang[$lang] = [];
                 }
 
-                if (!$isFieldProcessed) {
-                    // generate tag group for each language and project
-                    foreach ($projects as $projectName) {
-                        $Project      = QUI::getProject($projectName);
-                        $projectLangs = $Project->getAttribute('langs');
-
-                        foreach ($projectLangs as $l) {
-                            $Project = QUI::getProject($projectName, $l);
-
-                            $Locale->setCurrent($l);
-
-                            if (!isset($fieldTagGroups[$l])) {
-                                $fieldTagGroups[$l] = [];
-                            }
-
-                            $TagGroup = self::addTagGroupToProject(
-                                $Project,
-                                $Field->getTitle($Locale),
-                                $Field->getWorkingTitle($Locale)
-                            );
-
-                            $tagsGroupIdsNew[$l][$Project->getName()][] = $TagGroup->getId();
-
-                            // remove all tags generated by this scripts from tag group
-                            $TagGroup->removeTagsByGenerator(self::TAG_GENERATOR);
-
-                            $fieldTagGroups[$l][] = $TagGroup;
+                // add tags to projects
+                foreach ($projects as $projectName) {
+                    // skip project if lang does not exist
+                    try {
+                        $Project = QUI::getProject($projectName, $lang);
+                    } catch (QUI\Exception $Exception) {
+                        if ($Exception->getCode() === 806) {
+                            // Project lang not found
+                            continue;
+                        } else {
+                            QUI\System\Log::writeException($Exception);
+                            throw $Exception;
                         }
                     }
 
-                    // generate tags
-                    $tags             = [];
-                    $tagTitlesByLang  = [];
-                    $isAttributeGroup = $Field instanceof QUI\ERP\Products\Field\Types\AttributeGroup;
+                    $tags = self::addTagsToProject($Project, $tagEntries);
 
-                    if ($isAttributeGroup) {
-                        $tagsPerAttributeGroupField[$fieldId] = [];
+                    if (!isset($tagsPerField[$fieldId][$lang])) {
+                        $tagsPerField[$fieldId][$lang] = [];
                     }
 
-                    if ($generateTags) {
-                        foreach ($options['entries'] as $entry) {
-                            $image = !empty($entry['image']) ? $entry['image'] : false;
-
-                            foreach ($entry['title'] as $lang => $text) {
-                                if (empty($lang) || empty($text)) {
-                                    continue;
-                                }
-
-                                if (!isset($tagsPerField[$fieldId][$lang])) {
-                                    $tagsPerField[$fieldId][$lang] = [];
-                                }
-
-                                $tagTitlesByLang[$lang][] = [
-                                    'title' => $text,
-                                    'image' => $image
-                                ];
-                            }
-
-                            if ($isAttributeGroup) {
-                                $tagsPerAttributeGroupField[$fieldId][$entry['valueId']] = [];
-                            }
-                        }
-                    }
-
-                    /// POSSIBLE CUT
-
-                    foreach ($tagTitlesByLang as $lang => $tagEntries) {
-                        $tagGroups = $fieldTagGroups[$lang];
-
-                        if (!isset($tagsByLang[$lang])) {
-                            $tagsByLang[$lang] = [];
-                        }
-
-                        // add tags to projects
-                        foreach ($projects as $projectName) {
-                            // skip project if lang does not exist
-                            try {
-                                $Project = QUI::getProject($projectName, $lang);
-                            } catch (QUI\Exception $Exception) {
-                                if ($Exception->getCode() === 806) {
-                                    continue;
-                                } else {
-                                    QUI\System\Log::writeException($Exception);
-                                    throw $Exception;
-                                }
-                            }
-
-                            $tags              = self::addTagsToProject($Project, $tagEntries);
-                            $categoryIds       = Categories::getCategoryIds();
-                            $tagGroupIdsBySite = [];
-
-                            /** @var QUI\ERP\Products\Category\Category $Category */
-                            foreach ($categoryIds as $categoryId) {
-                                $Category = Categories::getCategory($categoryId);
-
-                                if (!$Category->getField($Field->getId())) {
-                                    continue;
-                                }
-
-                                $sites = $Category->getSites($Project);
-
-                                /** @var QUI\Projects\Site $CategorySite */
-                                foreach ($sites as $CategorySite) {
-                                    $Edit   = $CategorySite->getEdit();
-                                    $siteId = $Edit->getId();
-
-                                    $siteTagGroupIds = $Edit->getAttribute('quiqqer.tags.tagGroups');
-                                    $siteTagGroupIds = \explode(',', $siteTagGroupIds);
-
-                                    $siteTagGroupIds = \array_values(
-                                        \array_filter($siteTagGroupIds, function ($value) {
-                                            return !empty($value);
-                                        })
-                                    );
-
-                                    // add tag groups to category sites
-                                    /** @var QUI\Tags\Groups\Group $TagGroup */
-                                    foreach ($tagGroups as $TagGroup) {
-                                        if (!\in_array($TagGroup->getId(), $siteTagGroupIds)) {
-                                            $siteTagGroupIds[] = $TagGroup->getId();
-                                        }
-                                    }
-
-                                    if (!isset($tagGroupIdsBySite[$siteId])) {
-                                        $tagGroupIdsBySite[$siteId] = [];
-                                    }
-
-                                    $tagGroupIdsBySite[$siteId] = array_merge(
-                                        $tagGroupIdsBySite[$siteId],
-                                        $siteTagGroupIds
-                                    );
-
-//                                    $Edit->setAttribute('quiqqer.tags.tagGroups', \implode(',', $siteTagGroupIds));
-//                                    $Edit->save(QUI::getUsers()->getSystemUser());
-                                }
-                            }
-
-                            // Assign tag group to Sites
-                            foreach ($tagGroupIdsBySite as $siteId => $siteTagGroupIds) {
-                                $Edit = new QUI\Projects\Site\Edit($Project, $siteId);
-
-                                $Edit->setAttribute('quiqqer.tags.tagGroups', \implode(',', $siteTagGroupIds));
-                                $Edit->save(QUI::getUsers()->getSystemUser());
-                            }
-                        }
-
-                        $tagsByLang[$lang] = $tags;
-
-                        /**
-                         * Try to assign tag names to AttributeGroup field entry values so that it can be
-                         * decided which product gets which tags exactly.
-                         */
-                        // $tagName = unique tag identifier
-                        if ($isAttributeGroup && isset($tagsPerAttributeGroupField[$fieldId])) {
-                            foreach ($tags as $k => $tagName) {
-                                $i = 0;
-
-                                foreach ($tagsPerAttributeGroupField[$fieldId] as $valueId => $tagsPerAttributeEntry) {
-                                    if ($i++ === $k) {
-                                        $tagsPerAttributeGroupField[$fieldId][$valueId][$lang] = $tagName;
-                                    }
-                                }
-                            }
-                        }
-
-                        // add tags to tag groups
-                        if ($generateTags) {
-                            /** @var QUI\Tags\Groups\Group $TagGroup */
-                            foreach ($tagGroups as $TagGroup) {
-                                $TagGroup->addTags($tags);
-                                $TagGroup->save();
-                            }
-                        }
-                    }
-
-                    /// POSSIBLE CUT END
-
-                    $fieldIdsProcessed[$fieldId] = $tagsByLang;
-                }
-
-                // assign tags to products
-                if (!isset($tagsToProducts[$productId])) {
-                    $tagsToProducts[$productId] = [];
-                }
-
-                foreach ($tagsByLang as $lang => $tags) {
-                    if (!isset($tagsToProducts[$productId][$lang])) {
-                        $tagsToProducts[$productId][$lang] = [];
-                    }
-
-                    $tagsToProducts[$productId][$lang] = \array_merge(
-                        $tagsToProducts[$productId][$lang],
+                    $tagsPerField[$fieldId][$lang] = array_merge(
+                        $tagsPerField[$fieldId][$lang],
                         $tags
                     );
 
-                    $tagsToProducts[$productId][$lang] = \array_unique($tagsToProducts[$productId][$lang]);
+                    $categoryIds       = Categories::getCategoryIds();
+                    $tagGroupIdsBySite = [];
+
+                    // Assign tag group based on field to all relevant category Sites.
+                    // But ONLY if the field is not already a default search filter field.
+
+                    if (!in_array($fieldId, $defaultSearchFilterFieldIds)) {
+                        /** @var QUI\ERP\Products\Category\Category $Category */
+                        foreach ($categoryIds as $categoryId) {
+                            $Category = Categories::getCategory($categoryId);
+
+                            if (!$Category->getField($Field->getId())) {
+                                continue;
+                            }
+
+                            $sites = $Category->getSites($Project);
+
+                            /** @var QUI\Projects\Site $CategorySite */
+                            foreach ($sites as $CategorySite) {
+                                $siteId = $CategorySite->getId();
+
+                                if (isset($tagGroupIdsBySite[$siteId])) {
+                                    continue;
+                                }
+
+                                $Edit = $CategorySite->getEdit();
+
+                                $siteTagGroupIds = $Edit->getAttribute('quiqqer.tags.tagGroups');
+                                $siteTagGroupIds = \explode(',', $siteTagGroupIds);
+
+                                $siteTagGroupIds = \array_values(
+                                    \array_filter($siteTagGroupIds, function ($value) {
+                                        return !empty($value);
+                                    })
+                                );
+
+                                // add tag groups to category sites
+                                /** @var QUI\Tags\Groups\Group $TagGroup */
+                                foreach ($tagGroups as $TagGroup) {
+                                    if (!\in_array($TagGroup->getId(), $siteTagGroupIds)) {
+                                        $siteTagGroupIds[] = $TagGroup->getId();
+                                    }
+                                }
+
+                                $tagGroupIdsBySite[$siteId] = $siteTagGroupIds;
+                            }
+                        }
+
+                        // Assign tag group to Sites
+                        foreach ($tagGroupIdsBySite as $siteId => $siteTagGroupIds) {
+                            $Edit = new QUI\Projects\Site\Edit($Project, $siteId);
+
+                            $siteTagGroupIds = array_values(array_unique($siteTagGroupIds));
+
+                            $Edit->setAttribute('quiqqer.tags.tagGroups', \implode(',', $siteTagGroupIds));
+                            $Edit->save(QUI::getUsers()->getSystemUser());
+                        }
+                    }
+                }
+
+                $tagsByLang[$lang] = $tags;
+
+                /**
+                 * Try to assign tag names to AttributeGroup field entry values so that it can be
+                 * decided which product gets which tags exactly.
+                 */
+                // $tagName = unique tag identifier
+                if ($isAttributeGroup && isset($tagsPerAttributeGroupField[$fieldId])) {
+                    foreach ($tags as $k => $tagName) {
+                        $i = 0;
+
+                        foreach ($tagsPerAttributeGroupField[$fieldId] as $valueId => $tagsPerAttributeEntry) {
+                            if ($i++ === $k) {
+                                $tagsPerAttributeGroupField[$fieldId][$valueId][$lang] = $tagName;
+                            }
+                        }
+                    }
+                }
+
+                // add tags to tag groups
+                /** @var QUI\Tags\Groups\Group $TagGroup */
+                foreach ($tagGroups as $TagGroup) {
+                    $TagGroup->addTags($tags);
+                    $TagGroup->save();
                 }
             }
         }
 
-        // Set tags to products
-        foreach ($tagsToProducts as $productId => $tags) {
-            $Product       = Products::getProduct($productId);
+        // delete tag groups that are not existing anymore and have no user-tags added
+        foreach ($tagGroupIdsCurrent as $lang => $projects) {
+            foreach ($projects as $projectName => $tagGroupIds) {
+                if (empty($tagsGroupIdsNew[$lang][$projectName])) {
+                    continue;
+                }
+
+                // determine deletion candidates
+                $deleteTagGroupIds = \array_diff(
+                    $tagGroupIds,
+                    $tagsGroupIdsNew[$lang][$projectName]
+                );
+
+                if (empty($deleteTagGroupIds)) {
+                    continue;
+                }
+
+                $Project = QUI::getProject($projectName, $lang);
+
+                foreach ($deleteTagGroupIds as $tagGroupId) {
+                    $TagGroup       = TagGroupsHandler::get($Project, $tagGroupId);
+                    $tagGroupTags   = $TagGroup->getTags();
+                    $deleteTagGroup = true;
+
+                    // check if any tags exist in the group other than generated by this script
+                    foreach ($tagGroupTags as $tagData) {
+                        if ($tagData['generator'] != self::TAG_GENERATOR) {
+                            $deleteTagGroup = false;
+                        }
+                    }
+
+                    if ($deleteTagGroup) {
+                        $TagGroup->delete();
+                    }
+                }
+            }
+        }
+
+        // Determine the tags per product
+        foreach ($productIds as $productId) {
+            $Product            = Products::getProduct($productId);
+            $tagsAddedToProduct = [];
+
+            foreach ($tagsPerField as $fieldId => $tagsByLang) {
+                if (!$Product->hasField($fieldId)) {
+                    continue;
+                }
+
+                foreach ($tagsByLang as $lang => $tags) {
+                    if (!isset($tagsAddedToProduct[$lang])) {
+                        $tagsAddedToProduct[$lang] = [];
+                    }
+
+                    $tagsAddedToProduct[$lang] = \array_merge(
+                        $tagsAddedToProduct[$lang],
+                        $tags
+                    );
+
+                    $tagsAddedToProduct[$lang] = \array_unique($tagsAddedToProduct[$lang]);
+                }
+            }
+
             $forbiddenTags = [];
 
 //            if ($Product->getType() === QUI\ERP\Products\Product\Types\VariantChild::class) {
@@ -600,14 +626,29 @@ class Crons
                     continue;
                 }
 
-                foreach ($tags as $lang => $t) {
+                // determine tags to delete
+                $deleteTags = $ProductField->getTags(self::TAG_GENERATOR);
+
+                foreach ($deleteTags as $lang => $langTags) {
+                    $deleteTags[$lang] = array_column($langTags, 'tag');
+                }
+
+                foreach ($tagsAddedToProduct as $lang => $tags) {
                     if (isset($forbiddenTags[$lang])) {
-                        $t = \array_diff($t, $forbiddenTags[$lang]);
+                        $tags = \array_diff($tags, $forbiddenTags[$lang]);
                     }
 
+                    // determine tags to delete
+                    $deleteTags[$lang] = array_diff($deleteTags[$lang], $tags);
+
                     // add tags from product
-                    $ProductField->removeTags($lang, self::TAG_GENERATOR);
-                    $ProductField->addTags($t, $lang, self::TAG_GENERATOR);
+                    $ProductField->addTags($tags, $lang, self::TAG_GENERATOR);
+                }
+
+                foreach ($deleteTags as $lang => $tags) {
+                    foreach ($tags as $tag) {
+                        $ProductField->removeTag($tag, $lang);
+                    }
                 }
             }
 
@@ -618,40 +659,7 @@ class Crons
             }
         }
 
-        // delete tag groups that are not existing anymore and have no user-tags added
-        foreach ($tagGroupIdsCurrent as $lang => $projects) {
-            foreach ($projects as $projectName => $tagGroupIds) {
-                if (empty($tagsGroupIdsNew[$lang][$projectName])) {
-                    continue;
-                }
-
-                // determine deletion candidates
-                $deleteTagGroupIds = \array_diff(
-                    $tagGroupIds,
-                    $tagsGroupIdsNew[$lang][$projectName]
-                );
-
-                if (empty($deleteTagGroupIds)) {
-                    continue;
-                }
-
-                $Project = QUI::getProject($projectName, $lang);
-
-                foreach ($deleteTagGroupIds as $tagGroupId) {
-                    $TagGroup     = TagGroupsHandler::get($Project, $tagGroupId);
-                    $tagGroupTags = $TagGroup->getTags();
-
-                    // check if any tags exist in the group other than generated by this script
-                    foreach ($tagGroupTags as $tagData) {
-                        if ($tagData['generator'] != self::TAG_GENERATOR) {
-                            continue 2;
-                        }
-                    }
-
-                    $TagGroup->delete();
-                }
-            }
-        }
+        self::createSitesToProductTagsCache();
     }
 
     /**
