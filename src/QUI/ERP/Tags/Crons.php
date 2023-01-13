@@ -315,6 +315,21 @@ class Crons
             });
         }
 
+        // Prepare array for tag groups that will be assigned to category sites
+        $tagGroupIdsBySite = [];
+
+        foreach ($projects as $projectName) {
+            $Project = QUI::getProject($projectName);
+
+            $tagGroupIdsBySite[$projectName] = [];
+
+            $projectLangs = $Project->getAttribute('langs');
+
+            foreach ($projectLangs as $lang) {
+                $tagGroupIdsBySite[$projectName][$lang] = [];
+            }
+        }
+
         // Fetch relevant fields
         $fields = array_merge(
             Fields::getFieldsByType(Fields::TYPE_ATTRIBUTE_GROUPS),        // de: "Attribut-Liste"
@@ -411,7 +426,13 @@ class Crons
             }
 
             foreach ($tagTitlesByLang as $lang => $tagEntries) {
-                $tagGroups = $fieldTagGroups[$lang];
+                $tagGroups   = $fieldTagGroups[$lang];
+                $tagGroupIds = [];
+
+                /** @var QUI\Tags\Groups\Group $TagGroup */
+                foreach ($tagGroups as $TagGroup) {
+                    $tagGroupIds[] = $TagGroup->getId();
+                }
 
                 if (!isset($tagsByLang[$lang])) {
                     $tagsByLang[$lang] = [];
@@ -443,12 +464,10 @@ class Crons
                         $tags
                     );
 
-                    $categoryIds       = Categories::getCategoryIds();
-                    $tagGroupIdsBySite = [];
+                    $categoryIds = Categories::getCategoryIds();
 
                     // Assign tag group based on field to all relevant category Sites.
                     // But ONLY if the field is not already a default search filter field.
-
                     if (!in_array($fieldId, $defaultSearchFilterFieldIds)) {
                         /** @var QUI\ERP\Products\Category\Category $Category */
                         foreach ($categoryIds as $categoryId) {
@@ -464,7 +483,12 @@ class Crons
                             foreach ($sites as $CategorySite) {
                                 $siteId = $CategorySite->getId();
 
-                                if (isset($tagGroupIdsBySite[$siteId])) {
+                                if (isset($tagGroupIdsBySite[$projectName][$lang][$siteId])) {
+                                    $tagGroupIdsBySite[$projectName][$lang][$siteId] = array_merge(
+                                        $tagGroupIdsBySite[$projectName][$lang][$siteId],
+                                        $tagGroupIds
+                                    );
+
                                     continue;
                                 }
 
@@ -479,27 +503,11 @@ class Crons
                                     })
                                 );
 
-                                // add tag groups to category sites
-                                /** @var QUI\Tags\Groups\Group $TagGroup */
-                                foreach ($tagGroups as $TagGroup) {
-                                    if (!\in_array($TagGroup->getId(), $siteTagGroupIds)) {
-                                        $siteTagGroupIds[] = $TagGroup->getId();
-                                    }
-                                }
-
-                                $tagGroupIdsBySite[$siteId] = $siteTagGroupIds;
+                                $tagGroupIdsBySite[$projectName][$lang][$siteId] = array_merge(
+                                    $siteTagGroupIds,
+                                    $tagGroupIds
+                                );
                             }
-                        }
-
-                        // Assign tag group to Sites
-                        foreach ($tagGroupIdsBySite as $siteId => $siteTagGroupIds) {
-                            $Edit = new QUI\Projects\Site\Edit($Project, $siteId);
-
-                            $siteTagGroupIds = array_values(array_unique($siteTagGroupIds));
-
-                            $Edit->setAttribute('quiqqer.tags.tagGroups', \implode(',', $siteTagGroupIds));
-                            $Edit->unlockWithRights();
-                            $Edit->save(QUI::getUsers()->getSystemUser());
                         }
                     }
                 }
@@ -528,6 +536,22 @@ class Crons
                 foreach ($tagGroups as $TagGroup) {
                     $TagGroup->addTags($tags);
                     $TagGroup->save();
+                }
+            }
+        }
+
+        // Add tag groups to category sites
+        foreach ($tagGroupIdsBySite as $projectName => $tagsByLang) {
+            foreach ($tagsByLang as $lang => $tagsBySiteId) {
+                $Project = new QUI\Projects\Project($projectName, $lang);
+
+                foreach ($tagsBySiteId as $siteId => $tags) {
+                    $Edit = new QUI\Projects\Site\Edit($Project, $siteId);
+                    $tags = array_values(array_unique($tags));
+
+                    $Edit->setAttribute('quiqqer.tags.tagGroups', \implode(',', $tags));
+                    $Edit->unlockWithRights();
+                    $Edit->save(QUI::getUsers()->getSystemUser());
                 }
             }
         }
