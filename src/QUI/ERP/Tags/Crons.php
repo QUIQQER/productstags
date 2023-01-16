@@ -461,7 +461,11 @@ class Crons
 
                     $tagsPerField[$fieldId][$lang] = array_merge(
                         $tagsPerField[$fieldId][$lang],
-                        $tags
+                        [
+                            'project'    => $Project->getName(),
+                            'tagGroupId' => $TagGroup->getId(),
+                            'tags'       => $tags
+                        ]
                     );
 
                     $categoryIds = Categories::getCategoryIds();
@@ -617,17 +621,15 @@ class Crons
                     continue;
                 }
 
-                foreach ($tagsByLang as $lang => $tags) {
+                foreach ($tagsByLang as $lang => $entry) {
                     if (!isset($tagsAddedToProduct[$lang])) {
                         $tagsAddedToProduct[$lang] = [];
                     }
 
                     $tagsAddedToProduct[$lang] = \array_merge(
                         $tagsAddedToProduct[$lang],
-                        $tags
+                        $entry
                     );
-
-                    $tagsAddedToProduct[$lang] = \array_unique($tagsAddedToProduct[$lang]);
                 }
             }
 
@@ -668,21 +670,23 @@ class Crons
                 }
 
                 // determine tags to delete
-                $deleteTags = $ProductField->getTags(self::TAG_GENERATOR);
+                $deleteTags = [];
 
-                foreach ($deleteTags as $lang => $langTags) {
-                    $deleteTags[$lang] = array_column($langTags, 'tag');
-                }
+                foreach ($tagsAddedToProduct as $lang => $entry) {
+                    $TagGroup = TagGroupsHandler::get(
+                        new QUI\Projects\Project($entry['project'], $lang),
+                        $entry['tagGroupId']
+                    );
 
-                foreach ($tagsAddedToProduct as $lang => $tags) {
+                    $tags = $entry['tags'];
+
                     if (isset($forbiddenTags[$lang])) {
                         $tags = \array_diff($tags, $forbiddenTags[$lang]);
                     }
 
                     // determine tags to delete
-                    if (isset($deleteTags[$lang])) {
-                        $deleteTags[$lang] = array_diff($deleteTags[$lang], $tags);
-                    }
+                    $tagGroupTags      = array_column($TagGroup->getTags(), 'tag');
+                    $deleteTags[$lang] = array_diff($tagGroupTags, $tags);
 
                     // add tags from product
                     $ProductField->addTags($tags, $lang, self::TAG_GENERATOR);
