@@ -34,6 +34,8 @@ class Crons
      */
     const TAG_GENERATOR = 'quiqqer/productstags';
 
+    protected static array $productIdsByCategoryId = [];
+
     /**
      * Creates and updated product tag cache
      *
@@ -87,7 +89,7 @@ class Crons
      * @return void
      * @throws QUI\Exception
      */
-    protected static function createSitesToProductTagsCache()
+    public static function createSitesToProductTagsCache()
     {
         QUI\Watcher::$globalWatcherDisable = true;
 
@@ -144,12 +146,19 @@ class Crons
                     }
 
                     foreach ($productCategoryIds as $categoryId) {
-                        $ProductCategory = Categories::getCategory($categoryId);
-                        $productIds      = $ProductCategory->getProductIds([
-                            'where' => [
-                                'active' => 1
-                            ]
-                        ]);
+                        if (!isset(self::$productIdsByCategoryId[$categoryId])) {
+                            $ProductCategory = Categories::getCategory($categoryId);
+
+                            $productIds = $ProductCategory->getProductIds([
+                                'where' => [
+                                    'active' => 1
+                                ]
+                            ]);
+
+                            self::$productIdsByCategoryId[$categoryId] = $productIds;
+                        } else {
+                            $productIds = self::$productIdsByCategoryId[$categoryId];
+                        }
 
                         if (empty($productIds)) {
                             continue;
