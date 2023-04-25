@@ -117,4 +117,14 @@ class Events
             QUI\System\Log::addAlert($Exception->getMessage());
         }
     }
+
+    /**
+     * @return void
+     *
+     * @todo tag gruppe oder tag anlegen wenn es eine attributeliste ist
+     * @todo peat
+     */
+    public static function onFieldSave()
+    {
+    }
 }

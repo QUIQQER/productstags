@@ -573,6 +573,8 @@ class Crons
                     $Edit->setAttribute('quiqqer.tags.tagGroups', implode(',', $tags));
                     $Edit->unlockWithRights();
                     $Edit->save(QUI::getUsers()->getSystemUser());
+                    // @peat todo
+                    // @todo das speichern muss über die DB gemacht werden
                 }
             }
         }

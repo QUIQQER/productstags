@@ -9,10 +9,11 @@ namespace QUI\ERP\Tags;
 use QUI;
 use QUI\ERP\Products;
 use QUI\ERP\Products\Handler\Fields;
-use QUI\ERP\Products\Handler\Products as ProductsHandler;
 
 use function array_column;
 use function array_diff;
+use function array_filter;
+use function array_key_first;
 use function array_merge;
 use function array_search;
 use function array_unique;
@@ -61,12 +62,13 @@ class ProductEvents
         /*
          * Remember flags for firing onProductSave and writing products cache table
          */
+        /*
         $fireEventsFlag        = ProductsHandler::$fireEventsOnProductSave;
         $searchCacheUpdateFlag = ProductsHandler::$updateProductSearchCache;
 
-        if ($generateAttributeListTags) {
-            Crons::generateProductAttributeListTags([$Product->getId()]);
-        }
+        //if ($generateAttributeListTags) {
+        //Crons::generateProductAttributeListTags([$Product->getId()]);
+        //}
 
         if ($fireEventsFlag) {
             ProductsHandler::enableGlobalFireEventsOnProductSave();
@@ -75,6 +77,7 @@ class ProductEvents
         if ($searchCacheUpdateFlag) {
             ProductsHandler::enableGlobalProductSearchCacheUpdate();
         }
+        */
 
         $tagFields   = $Product->getFieldsByType(Field::TYPE);
         $pId         = $Product->getId();
@@ -299,6 +302,75 @@ class ProductEvents
                         'tag' => $tag
                     ]
                 );
+            }
+        }
+    }
+
+    /**
+     * @param array $fieldData
+     * @param \QUI\ERP\Products\Product\Model $Product
+     * @return void
+     * @throws \QUI\ERP\Products\Field\Exception
+     */
+    public static function onProductSaveBefore(array &$fieldData, Products\Product\Model $Product)
+    {
+        $fields = array_filter($fieldData, function ($field) {
+            return $field['type'] === Fields::TYPE_ATTRIBUTE_GROUPS || $field['type'] === Fields::TYPE_ATTRIBUTE_LIST;
+        });
+
+        $tagFieldKey = array_key_first(
+            array_filter($fieldData, function ($field) {
+                return $field['id'] === QUI\ERP\Tags\Field::FIELD_TAGS;
+            })
+        );
+
+        $neededTags = array_map(function ($field) {
+            return $field['value'];
+        }, $fields);
+
+        $tagInArray = function ($tag, $arr) {
+            foreach ($arr as $entry) {
+                if ($entry['tag'] === $tag) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+
+        // remove all generated tags
+        // because of tag cleanup
+        foreach ($fieldData[$tagFieldKey]['value'] as $lang => $entry) {
+            foreach ($fieldData[$tagFieldKey]['value'][$lang] as $k => $tagData) {
+                if ($tagData['generator'] === 'quiqqer/productstags') {
+                    unset($fieldData[$tagFieldKey]['value'][$lang][$k]);
+                }
+            }
+        }
+
+        // add tags
+        foreach ($fields as $fieldDateEntry) {
+            $fieldId = $fieldDateEntry['id'];
+            $Field   = Fields::getField($fieldId);
+
+            $options      = $Field->getOptions();
+            $generateTags = !empty($options['generate_tags']);
+
+            if (!$generateTags) {
+                continue;
+            }
+
+            // add tag to the $tagField
+            foreach ($fieldData[$tagFieldKey]['value'] as $lang => $entry) {
+                foreach ($neededTags as $tag) {
+                    if (!$tagInArray($tag, $entry)) {
+                        $fieldData[$tagFieldKey]['value'][$lang][] = [
+                            'tag'       => $tag,
+                            'generator' => 'quiqqer/productstags'
+                        ];
+                    }
+                }
             }
         }
     }

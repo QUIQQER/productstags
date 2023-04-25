@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <events>
     <event on="onQuiqqerProductsProductSave" fire="\QUI\ERP\Tags\ProductEvents::onProductSave"/>
+    <event on="onQuiqqerProductsProductSaveBefore" fire="\QUI\ERP\Tags\ProductEvents::onProductSaveBefore"/>
     <event on="onPackageSetup" fire="\QUI\ERP\Tags\Events::onPackageSetup"/>
 
     <event on="onQuiqqerProductsProductCleanup" fire="\QUI\ERP\Tags\Events::onQuiqqerProductsProductCleanup"/>
