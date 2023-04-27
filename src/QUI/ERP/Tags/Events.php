@@ -6,8 +6,12 @@
 
 namespace QUI\ERP\Tags;
 
+use Exception;
 use QUI;
 use QUI\ERP\Products;
+
+use function current;
+use function json_encode;
 
 /**
  * Event handling for product events
@@ -19,6 +23,7 @@ class Events
 {
     /**
      * @param QUI\Package\Package $Package
+     * @throws \QUI\Exception
      */
     public static function onPackageSetup(QUI\Package\Package $Package)
     {
@@ -64,7 +69,7 @@ class Events
         ]);
 
         // if field exists -> update
-        if (\current(\current($result)) > 0) {
+        if (current(current($result)) > 0) {
             QUI::getDataBase()->update(
                 QUI\ERP\Products\Utils\Tables::getFieldTableName(),
                 [
@@ -75,7 +80,7 @@ class Events
                     'systemField'   => $fieldData['systemField'],
                     'standardField' => $fieldData['standardField'],
                     'search_type'   => $fieldData['search_type'],
-                    'options'       => \json_encode($fieldData['options'])
+                    'options'       => json_encode($fieldData['options'])
                 ],
                 ['id' => $fieldData['id']]
             );
@@ -108,8 +113,18 @@ class Events
         // if field does not exist -> create
         try {
             Products\Handler\Fields::createField($fieldData);
-        } catch (QUI\Exception $Exception) {
+        } catch (Exception $Exception) {
             QUI\System\Log::addAlert($Exception->getMessage());
         }
+    }
+
+    /**
+     * @return void
+     *
+     * @todo tag gruppe oder tag anlegen wenn es eine attributeliste ist
+     * @todo peat
+     */
+    public static function onFieldSave()
+    {
     }
 }

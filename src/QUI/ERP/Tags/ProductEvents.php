@@ -9,7 +9,19 @@ namespace QUI\ERP\Tags;
 use QUI;
 use QUI\ERP\Products;
 use QUI\ERP\Products\Handler\Fields;
-use QUI\ERP\Products\Handler\Products as ProductsHandler;
+
+use function array_column;
+use function array_diff;
+use function array_filter;
+use function array_key_first;
+use function array_merge;
+use function array_search;
+use function array_unique;
+use function array_values;
+use function current;
+use function explode;
+use function implode;
+use function trim;
 
 /**
  * Event handling for product events
@@ -26,13 +38,13 @@ class ProductEvents
      */
     public static function onQuiqqerProductsProductCleanup(): void
     {
-        $productIdsQuery = "SELECT `id` FROM ".QUI\ERP\Products\Utils\Tables::getProductTableName();
-        $productIdsQuery .= " WHERE `fieldData` NOT LIKE '%\"type\":\"".Fields::TYPE_ATTRIBUTE_GROUPS."\"%'";
-        $productIdsQuery .= " AND `fieldData` NOT LIKE '%\"type\":\"".Fields::TYPE_ATTRIBUTE_LIST."\"%'";
+        $productIdsQuery = "SELECT `id` FROM " . QUI\ERP\Products\Utils\Tables::getProductTableName();
+        $productIdsQuery .= " WHERE `fieldData` NOT LIKE '%\"type\":\"" . Fields::TYPE_ATTRIBUTE_GROUPS . "\"%'";
+        $productIdsQuery .= " AND `fieldData` NOT LIKE '%\"type\":\"" . Fields::TYPE_ATTRIBUTE_LIST . "\"%'";
         $productIdsQuery .= " AND `active` = 1";
 
         try {
-            Crons::generateProductAttributeListTags(\array_column($productIdsQuery, 'id'));
+            Crons::generateProductAttributeListTags(array_column($productIdsQuery, 'id'));
         } catch (\Exception $Exception) {
             QUI\System\Log::writeException($Exception);
         }
@@ -43,17 +55,20 @@ class ProductEvents
      * @param bool $generateAttributeListTags (optional)
      * @throws QUI\Exception
      */
-    public static function onProductSave($Product, bool $generateAttributeListTags = true)
-    {
+    public static function onProductSave(
+        Products\Product\Model $Product,
+        bool $generateAttributeListTags = true
+    ) {
         /*
          * Remember flags for firing onProductSave and writing products cache table
          */
+        /*
         $fireEventsFlag        = ProductsHandler::$fireEventsOnProductSave;
         $searchCacheUpdateFlag = ProductsHandler::$updateProductSearchCache;
 
-        if ($generateAttributeListTags) {
-            Crons::generateProductAttributeListTags([$Product->getId()]);
-        }
+        //if ($generateAttributeListTags) {
+        //Crons::generateProductAttributeListTags([$Product->getId()]);
+        //}
 
         if ($fireEventsFlag) {
             ProductsHandler::enableGlobalFireEventsOnProductSave();
@@ -62,6 +77,7 @@ class ProductEvents
         if ($searchCacheUpdateFlag) {
             ProductsHandler::enableGlobalProductSearchCacheUpdate();
         }
+        */
 
         $tagFields   = $Product->getFieldsByType(Field::TYPE);
         $pId         = $Product->getId();
@@ -76,7 +92,7 @@ class ProductEvents
                     $productTags[$lang] = [];
                 }
 
-                $productTags[$lang] = \array_merge($productTags[$lang], $langTags);
+                $productTags[$lang] = array_merge($productTags[$lang], $langTags);
             }
         }
 
@@ -99,11 +115,11 @@ class ProductEvents
 
             $exists = false;
 
-            if (\current(\current($result)) > 0) {
+            if (current(current($result)) > 0) {
                 $exists = true;
             }
 
-            // if product had tags previously and now doesnt -> delete db entry
+            // if product had tags previously and now doesn't -> delete db entry
             if ($exists && empty($langTags)) {
                 $DB->delete(
                     $tblProducts2Tags,
@@ -113,20 +129,20 @@ class ProductEvents
                 );
             }
 
-            // if product didnt have tags previoulsy and now doesnt either -> do nothing
+            // if product didn't have tags previously and now doesn't either -> do nothing
             if (empty($langTags)) {
                 continue;
             }
 
-            $langTags = \array_values(\array_unique($langTags));
+            $langTags = array_values(array_unique($langTags));
 
-            // if products didnt have tags previously but now does -> insert
+            // if products didn't have tags previously but now does -> insert
             if (!$exists) {
                 $DB->insert(
                     $tblProducts2Tags,
                     [
                         'id'   => $pId,
-                        'tags' => ','.\implode(',', $langTags).','
+                        'tags' => ',' . implode(',', $langTags) . ','
                     ]
                 );
             }
@@ -135,7 +151,7 @@ class ProductEvents
             $DB->update(
                 $tblProducts2Tags,
                 [
-                    'tags' => ','.\implode(',', $langTags).','
+                    'tags' => ',' . implode(',', $langTags) . ','
                 ],
                 [
                     'id' => $pId
@@ -146,7 +162,7 @@ class ProductEvents
             $DB->update(
                 Products\Utils\Tables::getProductCacheTableName(),
                 [
-                    'tags' => ','.implode(',', $langTags).','
+                    'tags' => ',' . implode(',', $langTags) . ','
                 ],
                 [
                     'id'   => $Product->getId(),
@@ -177,7 +193,7 @@ class ProductEvents
                 'where'  => [
                     'productIds' => [
                         'type'  => '%LIKE%',
-                        'value' => ','.$pId.','
+                        'value' => ',' . $pId . ','
                     ]
                 ]
             ]);
@@ -185,17 +201,17 @@ class ProductEvents
             foreach ($result as $row) {
                 $tagsWithProduct[] = $row['tag'];
 
-                $productIds = \trim($row['productIds'], ',');
-                $productIds = \explode(',', $productIds);
+                $productIds = trim($row['productIds'], ',');
+                $productIds = explode(',', $productIds);
 
                 $tags2ProductIds[$row['tag']] = $productIds;
             }
 
             // determine all tags that have been previously but no longer are associated with this product
-            $deleteTags = \array_diff($tagsWithProduct, $langTags);
+            $deleteTags = array_diff($tagsWithProduct, $langTags);
 
             foreach ($deleteTags as $tag) {
-                $pIdKey = \array_search($pId, $tags2ProductIds[$tag]);
+                $pIdKey = array_search($pId, $tags2ProductIds[$tag]);
 
                 if ($pIdKey === false) {
                     continue;
@@ -224,7 +240,7 @@ class ProductEvents
             }
 
             // determine all tags that have been added to the product
-            $newTags = \array_diff($langTags, $tagsWithProduct);
+            $newTags = array_diff($langTags, $tagsWithProduct);
 
             // get new tags from database to check if they have currently other products associated with them
             $tags2OtherProductIds = [];
@@ -245,8 +261,8 @@ class ProductEvents
                 ]);
 
                 foreach ($result as $row) {
-                    $productIds = \trim($row['productIds'], ',');
-                    $productIds = \explode(',', $productIds);
+                    $productIds = trim($row['productIds'], ',');
+                    $productIds = explode(',', $productIds);
 
                     $tags2OtherProductIds[$row['tag']] = $productIds;
                 }
@@ -270,7 +286,7 @@ class ProductEvents
                     $tblTags2Products,
                     [
                         'tag'        => $tag,
-                        'productIds' => ','.\implode(',', $productIds).','
+                        'productIds' => ',' . implode(',', $productIds) . ','
                     ]
                 );
             }
@@ -280,12 +296,81 @@ class ProductEvents
                 $DB->update(
                     $tblTags2Products,
                     [
-                        'productIds' => ','.\implode(',', $productIds).','
+                        'productIds' => ',' . implode(',', $productIds) . ','
                     ],
                     [
                         'tag' => $tag
                     ]
                 );
+            }
+        }
+    }
+
+    /**
+     * @param array $fieldData
+     * @param \QUI\ERP\Products\Product\Model $Product
+     * @return void
+     * @throws \QUI\ERP\Products\Field\Exception
+     */
+    public static function onProductSaveBefore(array &$fieldData, Products\Product\Model $Product)
+    {
+        $fields = array_filter($fieldData, function ($field) {
+            return $field['type'] === Fields::TYPE_ATTRIBUTE_GROUPS || $field['type'] === Fields::TYPE_ATTRIBUTE_LIST;
+        });
+
+        $tagFieldKey = array_key_first(
+            array_filter($fieldData, function ($field) {
+                return $field['id'] === QUI\ERP\Tags\Field::FIELD_TAGS;
+            })
+        );
+
+        $neededTags = array_map(function ($field) {
+            return $field['value'];
+        }, $fields);
+
+        $tagInArray = function ($tag, $arr) {
+            foreach ($arr as $entry) {
+                if ($entry['tag'] === $tag) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+
+        // remove all generated tags
+        // because of tag cleanup
+        foreach ($fieldData[$tagFieldKey]['value'] as $lang => $entry) {
+            foreach ($fieldData[$tagFieldKey]['value'][$lang] as $k => $tagData) {
+                if ($tagData['generator'] === 'quiqqer/productstags') {
+                    unset($fieldData[$tagFieldKey]['value'][$lang][$k]);
+                }
+            }
+        }
+
+        // add tags
+        foreach ($fields as $fieldDateEntry) {
+            $fieldId = $fieldDateEntry['id'];
+            $Field   = Fields::getField($fieldId);
+
+            $options      = $Field->getOptions();
+            $generateTags = !empty($options['generate_tags']);
+
+            if (!$generateTags) {
+                continue;
+            }
+
+            // add tag to the $tagField
+            foreach ($fieldData[$tagFieldKey]['value'] as $lang => $entry) {
+                foreach ($neededTags as $tag) {
+                    if (!$tagInArray($tag, $entry)) {
+                        $fieldData[$tagFieldKey]['value'][$lang][] = [
+                            'tag'       => $tag,
+                            'generator' => 'quiqqer/productstags'
+                        ];
+                    }
+                }
             }
         }
     }

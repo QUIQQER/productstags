@@ -447,7 +447,7 @@ class Field extends Products\Field\Field
             }
         }
 
-        return ','.\implode(',', $searchCacheValues).',';
+        return ',' . \implode(',', $searchCacheValues) . ',';
     }
 
 
