@@ -59,26 +59,6 @@ class ProductEvents
         Products\Product\Model $Product,
         bool $generateAttributeListTags = true
     ) {
-        /*
-         * Remember flags for firing onProductSave and writing products cache table
-         */
-        /*
-        $fireEventsFlag        = ProductsHandler::$fireEventsOnProductSave;
-        $searchCacheUpdateFlag = ProductsHandler::$updateProductSearchCache;
-
-        //if ($generateAttributeListTags) {
-        //Crons::generateProductAttributeListTags([$Product->getId()]);
-        //}
-
-        if ($fireEventsFlag) {
-            ProductsHandler::enableGlobalFireEventsOnProductSave();
-        }
-
-        if ($searchCacheUpdateFlag) {
-            ProductsHandler::enableGlobalProductSearchCacheUpdate();
-        }
-        */
-
         $tagFields   = $Product->getFieldsByType(Field::TYPE);
         $pId         = $Product->getId();
         $productTags = [];
@@ -268,7 +248,7 @@ class ProductEvents
                 }
             }
 
-            // determine wether new tags for this product have to be inserted or updated
+            // determine whether new tags for this product have to be inserted or updated
             foreach ($newTags as $tag) {
                 if (isset($tags2OtherProductIds[$tag])) {
                     $tags2OtherProductIds[$tag][] = $pId;
@@ -282,13 +262,16 @@ class ProductEvents
 
             // insert new tag entries
             foreach ($insertTagsDB as $tag => $productIds) {
-                $DB->insert(
-                    $tblTags2Products,
-                    [
-                        'tag'        => $tag,
-                        'productIds' => ',' . implode(',', $productIds) . ','
-                    ]
-                );
+                try {
+                    $DB->insert(
+                        $tblTags2Products,
+                        [
+                            'tag'        => $tag,
+                            'productIds' => ',' . implode(',', $productIds) . ','
+                        ]
+                    );
+                } catch (QUI\Exception $Exception) {
+                }
             }
 
             // update existing tag entries
@@ -325,12 +308,12 @@ class ProductEvents
         );
 
         $neededTags = array_map(function ($field) {
-            return $field['value'];
+            return QUI\Tags\Manager::clearTagName($field['value']);
         }, $fields);
 
         $tagInArray = function ($tag, $arr) {
             foreach ($arr as $entry) {
-                if ($entry['tag'] === $tag) {
+                if (mb_strtolower($entry['tag']) === mb_strtolower($tag)) {
                     return true;
                 }
             }
@@ -373,5 +356,8 @@ class ProductEvents
                 }
             }
         }
+
+        // set data to field instance
+        $Product->getField(QUI\ERP\Tags\Field::FIELD_TAGS)->setValue($fieldData[$tagFieldKey]['value']);
     }
 }
