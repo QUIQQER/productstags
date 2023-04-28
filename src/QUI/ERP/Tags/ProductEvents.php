@@ -21,6 +21,7 @@ use function array_values;
 use function current;
 use function explode;
 use function implode;
+use function is_array;
 use function trim;
 
 /**
@@ -324,10 +325,12 @@ class ProductEvents
 
         // remove all generated tags
         // because of tag cleanup
-        foreach ($fieldData[$tagFieldKey]['value'] as $lang => $entry) {
-            foreach ($fieldData[$tagFieldKey]['value'][$lang] as $k => $tagData) {
-                if ($tagData['generator'] === 'quiqqer/productstags') {
-                    unset($fieldData[$tagFieldKey]['value'][$lang][$k]);
+        if (isset($fieldData[$tagFieldKey]['value']) && is_array($fieldData[$tagFieldKey]['value'])) {
+            foreach ($fieldData[$tagFieldKey]['value'] as $lang => $entry) {
+                foreach ($fieldData[$tagFieldKey]['value'][$lang] as $k => $tagData) {
+                    if ($tagData['generator'] === 'quiqqer/productstags') {
+                        unset($fieldData[$tagFieldKey]['value'][$lang][$k]);
+                    }
                 }
             }
         }
@@ -341,6 +344,10 @@ class ProductEvents
             $generateTags = !empty($options['generate_tags']);
 
             if (!$generateTags) {
+                continue;
+            }
+
+            if (!is_array($fieldData[$tagFieldKey]['value'])) {
                 continue;
             }
 
