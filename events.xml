@@ -4,5 +4,6 @@
     <event on="onQuiqqerProductsProductSaveBefore" fire="\QUI\ERP\Tags\ProductEvents::onProductSaveBefore"/>
     <event on="onPackageSetup" fire="\QUI\ERP\Tags\Events::onPackageSetup"/>
 
+    <!-- ??? falscher call? ProductEvents::onQuiqqerProductsProductCleanup ? -->
     <event on="onQuiqqerProductsProductCleanup" fire="\QUI\ERP\Tags\Events::onQuiqqerProductsProductCleanup"/>
 </events>
