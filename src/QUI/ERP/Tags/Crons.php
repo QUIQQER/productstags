@@ -24,6 +24,8 @@ use function implode;
 use function in_array;
 use function ini_get;
 use function is_numeric;
+use function json_decode;
+use function json_encode;
 use function set_time_limit;
 
 /**
@@ -33,8 +35,8 @@ use function set_time_limit;
  */
 class Crons
 {
-    const TBL_PRODUCTS_2_TAGS = 'products_to_tags';
-    const TBL_TAGS_2_PRODUCTS = 'tags_to_products';
+    const TBL_PRODUCTS_2_TAGS       = 'products_to_tags';
+    const TBL_TAGS_2_PRODUCTS       = 'tags_to_products';
     const TBL_SITES_TO_PRODUCT_TAGS = 'sites_to_product_tags';
 
     /**
@@ -567,14 +569,30 @@ class Crons
                 $Project = new QUI\Projects\Project($projectName, $lang);
 
                 foreach ($tagsBySiteId as $siteId => $tags) {
-                    $Edit = new QUI\Projects\Site\Edit($Project, $siteId);
-                    $tags = array_values(array_unique($tags));
+                    // Fetch site extras directly from db
+                    $siteExtrasResult = QUI::getDataBase()->fetch([
+                        'select' => 'extra',
+                        'from'   => $Project->table(),
+                        'where'  => [
+                            'id' => $siteId
+                        ],
+                        'limit' => 1
+                    ]);
 
-                    $Edit->setAttribute('quiqqer.tags.tagGroups', implode(',', $tags));
-                    $Edit->unlockWithRights();
-                    $Edit->save(QUI::getUsers()->getSystemUser());
-                    // @peat todo
-                    // @todo das speichern muss über die DB gemacht werden
+                    $siteExtras = json_decode($siteExtrasResult[0]['extra'], true);
+
+                    $siteExtras['quiqqer.tags.tagGroups'] = implode(',', $tags);
+
+                    // Insert extras
+                    QUI::getDataBase()->update(
+                        $Project->table(),
+                        [
+                            'extra' => json_encode($siteExtras)
+                        ],
+                        [
+                            'id' => $siteId
+                        ]
+                    );
                 }
             }
         }
