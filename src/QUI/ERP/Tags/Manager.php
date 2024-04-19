@@ -8,7 +8,6 @@ namespace QUI\ERP\Tags;
 
 use QUI;
 use QUI\ERP\Products\Handler\Products;
-
 use QUI\ERP\Products\Product\Product;
 use QUI\Exception;
 

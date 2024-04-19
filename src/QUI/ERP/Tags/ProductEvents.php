@@ -10,7 +10,6 @@ use Exception;
 use QUI;
 use QUI\ERP\Products;
 use QUI\ERP\Products\Handler\Fields;
-
 use QUI\ERP\Products\Product\Model;
 
 use function array_column;
@@ -48,7 +47,8 @@ class ProductEvents
         $productIdsQuery .= " AND `active` = 1";
 
         try {
-            Crons::generateProductAttributeListTags(array_column($productIdsQuery, 'id'));
+            $result = QUI::getDatabase()->fetchSQL($productIdsQuery);
+            Crons::generateProductAttributeListTags(array_column($result, 'id'));
         } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
         }

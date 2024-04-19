@@ -8,9 +8,7 @@ namespace QUI\ERP\Tags;
 
 use QUI;
 use QUI\ERP\Products;
-
 use QUI\ERP\Products\Field\Exception;
-
 use QUI\ERP\Products\Field\View;
 
 use function array_merge;
