@@ -8,7 +8,14 @@ namespace QUI\ERP\Tags;
 
 use QUI;
 use QUI\ERP\Products\Handler\Products;
-use QUI\Projects\Site;
+
+use QUI\ERP\Products\Product\Product;
+use QUI\Exception;
+
+use function array_filter;
+use function current;
+use function explode;
+use function trim;
 
 /**
  * Product Tags Manager
@@ -21,31 +28,31 @@ class Manager
     /**
      * Get all (product) tags for a product category Site.
      *
-     * @param Site $Site
+     * @param QUI\Interfaces\Projects\Site $Site
      * @return string[] - Internal tag names
      *
      * @throws QUI\Exception
      */
-    public static function getTagsFromProductCategorySite(Site $Site): array
+    public static function getTagsFromProductCategorySite(QUI\Interfaces\Projects\Site $Site): array
     {
         $result = QUI::getDataBase()->fetch([
             'select' => [
                 'tags'
             ],
-            'from'   => QUI::getDBProjectTableName(Crons::TBL_SITES_TO_PRODUCT_TAGS, $Site->getProject()),
-            'where'  => [
+            'from' => QUI::getDBProjectTableName(Crons::TBL_SITES_TO_PRODUCT_TAGS, $Site->getProject()),
+            'where' => [
                 'id' => $Site->getId()
             ],
-            'limit'  => 1
+            'limit' => 1
         ]);
 
         if (empty($result) || empty($result[0]['tags'])) {
             return [];
         }
 
-        $tags = \explode(',', $result[0]['tags']);
+        $tags = explode(',', $result[0]['tags']);
 
-        return \array_filter($tags, function ($tag) {
+        return array_filter($tags, function ($tag) {
             return !empty($tag);
         });
     }
@@ -55,13 +62,14 @@ class Manager
      *
      * @param array $tags - list of tags
      * @param string $lang - lang of products project
-     * @param integer $limit (optional)
+     * @param integer|null $limit (optional)
      *
      * @return array
+     * @throws Exception
      */
-    public function getProductIdsFromTags($tags, $lang, $limit = null)
+    public function getProductIdsFromTags(array $tags, string $lang, int $limit = null): array
     {
-        $ids     = [];
+        $ids = [];
         $Project = QUI::getProjectManager()->getStandard();
         $Project = QUI::getProject($Project->getName(), $lang);
 
@@ -69,25 +77,24 @@ class Manager
             'select' => [
                 'productIds'
             ],
-            'from'   => QUI::getDBProjectTableName(Crons::TBL_TAGS_2_PRODUCTS, $Project),
-            'where'  => [
+            'from' => QUI::getDBProjectTableName(Crons::TBL_TAGS_2_PRODUCTS, $Project),
+            'where' => [
                 'tag' => [
-                    'type'  => 'IN',
+                    'type' => 'IN',
                     'value' => $tags
                 ]
             ],
-            'limit'  => $limit === null ? false : (int)$limit
+            'limit' => $limit === null ? false : $limit
         ]);
 
         if (empty($result)) {
             return $ids;
         }
 
-        $data = \current($result);
-        $ids  = \trim($data['productIds'], ',');
-        $ids  = \explode(',', $ids);
+        $data = current($result);
+        $ids = trim($data['productIds'], ',');
 
-        return $ids;
+        return explode(',', $ids);
     }
 
     /**
@@ -95,17 +102,21 @@ class Manager
      *
      * @param array $tags - list of tags
      * @param string $lang - lang of products project
-     * @param integer $limit (optional)
+     * @param integer|null $limit (optional)
      *
      * @return array
+     * @throws Exception
      */
-    public function getProductsFromTags($tags, $lang, $limit = null)
+    public function getProductsFromTags(array $tags, string $lang, int $limit = null): array
     {
-        $products   = [];
+        $products = [];
         $productIds = $this->getProductIdsFromTags($tags, $lang, $limit);
 
         foreach ($productIds as $pId) {
-            $products[] = Products::getProduct($pId);
+            try {
+                $products[] = Products::getProduct($pId);
+            } catch (QUI\Exception) {
+            }
         }
 
         return $products;
@@ -114,37 +125,41 @@ class Manager
     /**
      * Get all tags associated with a product
      *
-     * @param QUI\ERP\Products\Product\Product $Product
+     * @param Product $Product
      * @param string $lang
-     * @param integer $limit (optional)
+     * @param integer|null $limit (optional)
      *
      * @return array
+     * @throws Exception
+     * @throws QUI\Database\Exception
      */
-    public function getTagsFromProduct($Product, $lang, $limit = null)
-    {
+    public function getTagsFromProduct(
+        QUI\ERP\Products\Product\Product $Product,
+        string $lang,
+        int $limit = null
+    ): array {
         $Project = QUI::getProjectManager()->getStandard();
         $Project = QUI::getProject($Project->getName(), $lang);
-        $tags    = [];
+        $tags = [];
 
         $result = QUI::getDataBase()->fetch([
             'select' => [
                 'tags'
             ],
-            'from'   => QUI::getDBProjectTableName(Crons::TBL_PRODUCTS_2_TAGS, $Project),
-            'where'  => [
+            'from' => QUI::getDBProjectTableName(Crons::TBL_PRODUCTS_2_TAGS, $Project),
+            'where' => [
                 'id' => $Product->getId()
             ],
-            'limit'  => $limit === null ? false : (int)$limit
+            'limit' => $limit === null ? false : $limit
         ]);
 
         if (empty($result)) {
             return $tags;
         }
 
-        $data = \current($result);
-        $tags = \trim($data['tags'], ',');
-        $tags = \explode(',', $tags);
+        $data = current($result);
+        $tags = trim($data['tags'], ',');
 
-        return $tags;
+        return explode(',', $tags);
     }
 }

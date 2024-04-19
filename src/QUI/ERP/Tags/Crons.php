@@ -35,8 +35,8 @@ use function set_time_limit;
  */
 class Crons
 {
-    const TBL_PRODUCTS_2_TAGS       = 'products_to_tags';
-    const TBL_TAGS_2_PRODUCTS       = 'tags_to_products';
+    const TBL_PRODUCTS_2_TAGS = 'products_to_tags';
+    const TBL_TAGS_2_PRODUCTS = 'tags_to_products';
     const TBL_SITES_TO_PRODUCT_TAGS = 'sites_to_product_tags';
 
     /**
@@ -52,10 +52,10 @@ class Crons
      * @return void
      * @throws QUI\Exception
      */
-    public static function createCache()
+    public static function createCache(): void
     {
-        $Project  = QUI::getProjectManager()->getStandard();
-        $langs    = $Project->getLanguages();
+        $Project = QUI::getProjectManager()->getStandard();
+        $langs = $Project->getLanguages();
         $DataBase = QUI::getDataBase();
 
         // empty tables
@@ -74,8 +74,8 @@ class Crons
 
         $productIds = QUI::getDataBase()->fetch([
             'select' => 'id',
-            'from'   => QUI\ERP\Products\Utils\Tables::getProductTableName(),
-            'where'  => [
+            'from' => QUI\ERP\Products\Utils\Tables::getProductTableName(),
+            'where' => [
                 'active' => 1
             ]
         ]);
@@ -99,19 +99,19 @@ class Crons
      * @return void
      * @throws QUI\Exception
      */
-    public static function createSitesToProductTagsCache()
+    public static function createSitesToProductTagsCache(): void
     {
         QUI\Watcher::$globalWatcherDisable = true;
 
-        $Project  = QUI::getProjectManager()->getStandard();
-        $langs    = $Project->getLanguages();
+        $Project = QUI::getProjectManager()->getStandard();
+        $langs = $Project->getLanguages();
         $DataBase = QUI::getDataBase();
 
         // empty tables
         foreach ($langs as $l) {
             $LangProject = QUI::getProject($Project->getName(), $l);
 
-            $tblProducts2Tags      = QUI::getDBProjectTableName(self::TBL_PRODUCTS_2_TAGS, $LangProject);
+            $tblProducts2Tags = QUI::getDBProjectTableName(self::TBL_PRODUCTS_2_TAGS, $LangProject);
             $tblSitesToProductTags = QUI::getDBProjectTableName(self::TBL_SITES_TO_PRODUCT_TAGS, $LangProject);
 
             $Statement = $DataBase->getPDO()->prepare('TRUNCATE TABLE ' . $tblSitesToProductTags . ';');
@@ -124,8 +124,8 @@ class Crons
             ]);
 
             foreach ($productCategorySiteIds as $entry) {
-                $categorySiteId     = $entry['id'];
-                $siteProductTags    = [];
+                $categorySiteId = $entry['id'];
+                $siteProductTags = [];
                 $productCategoryIds = [];
 
                 try {
@@ -179,14 +179,14 @@ class Crons
                             'select' => [
                                 'tags'
                             ],
-                            'from'   => $tblProducts2Tags,
-                            'where'  => [
-                                'id'   => [
-                                    'type'  => 'IN',
+                            'from' => $tblProducts2Tags,
+                            'where' => [
+                                'id' => [
+                                    'type' => 'IN',
                                     'value' => $productIds
                                 ],
                                 'tags' => [
-                                    'type'  => 'NOT',
+                                    'type' => 'NOT',
                                     'value' => null
                                 ]
                             ]
@@ -217,7 +217,7 @@ class Crons
                     QUI::getDataBase()->insert(
                         $tblSitesToProductTags,
                         [
-                            'id'   => $categorySiteId,
+                            'id' => $categorySiteId,
                             'tags' => ',' . implode(',', $siteProductTags) . ','
                         ]
                     );
@@ -247,16 +247,16 @@ class Crons
 
         // Get last execution date of this cron
         $considerCronExecDate = empty($productIds);
-        $LastCronExecDate     = date_create('1970-01-01 00:00:00');
+        $LastCronExecDate = date_create('1970-01-01 00:00:00');
 
         if ($considerCronExecDate) {
             $result = QUI::getDataBase()->fetch([
                 'select' => 'lastexec',
-                'from'   => QUI\Cron\Manager::table(),
-                'where'  => [
+                'from' => QUI\Cron\Manager::table(),
+                'where' => [
                     'exec' => '\QUI\ERP\Tags\Crons::generateProductAttributeListTags'
                 ],
-                'limit'  => 1
+                'limit' => 1
             ]);
 
             if (!empty($result)) {
@@ -270,7 +270,7 @@ class Crons
         $tagGroupIdsCurrent = [];
 
         foreach ($projects as $projectName) {
-            $Project          = QUI::getProject($projectName);
+            $Project = QUI::getProject($projectName);
             $projectLanguages = $Project->getAttribute('langs');
 
             foreach ($projectLanguages as $l) {
@@ -292,7 +292,7 @@ class Crons
         }
 
         $tagsGroupIdsNew = [];
-        $languages       = QUI::availableLanguages();
+        $languages = QUI::availableLanguages();
 
         foreach ($languages as $l) {
             $tagsGroupIdsNew[$l] = [];
@@ -307,7 +307,7 @@ class Crons
         // reset time limit
         set_time_limit(ini_get('max_execution_time'));
 
-        $tagsPerField               = []; // only applied when parsing $Field of type AttributeGroup
+        $tagsPerField = []; // only applied when parsing $Field of type AttributeGroup
         $tagsPerAttributeGroupField = [];
 
         if (empty($productIds)) {
@@ -322,9 +322,9 @@ class Crons
 
         // Determine which fields are already set as global search filters
         // For these tags, tag groups are not automatically assigned to product category sites.
-        $ProductSearchConfig              = ProductSearchUtils::getConfig();
+        $ProductSearchConfig = ProductSearchUtils::getConfig();
         $defaultSearchFilterFieldsSetting = $ProductSearchConfig->get('search', 'frontend');
-        $defaultSearchFilterFieldIds      = [];
+        $defaultSearchFilterFieldIds = [];
 
         if (!empty($defaultSearchFilterFieldsSetting)) {
             $defaultSearchFilterFieldIds = explode(',', $defaultSearchFilterFieldsSetting);
@@ -361,10 +361,10 @@ class Crons
         foreach ($fields as $Field) {
             $EditDate = date_create($Field->getAttribute('e_date'));
 
-            $fieldId        = $Field->getId();
-            $options        = $Field->getOptions();
+            $fieldId = $Field->getId();
+            $options = $Field->getOptions();
             $fieldTagGroups = [];
-            $generateTags   = !empty($options['generate_tags']);
+            $generateTags = !empty($options['generate_tags']);
 
             if (!$generateTags) {
                 continue;
@@ -389,7 +389,7 @@ class Crons
 
             // generate tag group for each language and project
             foreach ($projects as $projectName) {
-                $Project          = QUI::getProject($projectName);
+                $Project = QUI::getProject($projectName);
                 $projectLanguages = $Project->getAttribute('langs');
 
                 foreach ($projectLanguages as $l) {
@@ -409,7 +409,7 @@ class Crons
 
                     $tagsGroupIdsNew[$l][$Project->getName()][] = $TagGroup->getId();
 
-                    // remove all tags generated by this scripts from tag group
+                    // remove all tags generated by this script from tag group
                     $TagGroup->removeTagsByGenerator(self::TAG_GENERATOR);
 
                     $fieldTagGroups[$l][] = $TagGroup;
@@ -417,8 +417,8 @@ class Crons
             }
 
             // generate tags
-            $tags             = [];
-            $tagTitlesByLang  = [];
+            $tags = [];
+            $tagTitlesByLang = [];
             $isAttributeGroup = $Field instanceof QUI\ERP\Products\Field\Types\AttributeGroup;
 
             if ($isAttributeGroup) {
@@ -445,12 +445,12 @@ class Crons
             }
 
             foreach ($tagTitlesByLang as $lang => $tagEntries) {
-                $tagGroups   = $fieldTagGroups[$lang];
+                $tagGroups = $fieldTagGroups[$lang];
                 $tagGroupIds = [];
 
                 /** @var QUI\Tags\Groups\Group $TagGroup */
-                foreach ($tagGroups as $TagGroup) {
-                    $tagGroupIds[] = $TagGroup->getId();
+                foreach ($tagGroups as $TagGroupInstance) {
+                    $tagGroupIds[] = $TagGroupInstance->getId();
                 }
 
                 if (!isset($tagsByLang[$lang])) {
@@ -481,9 +481,9 @@ class Crons
                     $tagsPerField[$fieldId][$lang] = array_merge(
                         $tagsPerField[$fieldId][$lang],
                         [
-                            'project'    => $Project->getName(),
+                            'project' => $Project->getName(),
                             'tagGroupId' => $TagGroup->getId(),
-                            'tags'       => $tags
+                            'tags' => $tags
                         ]
                     );
 
@@ -572,8 +572,8 @@ class Crons
                     // Fetch site extras directly from db
                     $siteExtrasResult = QUI::getDataBase()->fetch([
                         'select' => 'extra',
-                        'from'   => $Project->table(),
-                        'where'  => [
+                        'from' => $Project->table(),
+                        'where' => [
                             'id' => $siteId
                         ],
                         'limit' => 1
@@ -605,11 +605,11 @@ class Crons
                 }
 
                 // Only consider tag groups that are not generated fields that are still generating tags
-                $Project         = new QUI\Projects\Project($projectName, $lang);
+                $Project = new QUI\Projects\Project($projectName, $lang);
                 $keepTagGroupIds = [];
 
                 foreach ($fieldIdsThatGenerateTags as $fieldId) {
-                    $Field      = Fields::getField($fieldId);
+                    $Field = Fields::getField($fieldId);
                     $tagGroupId = self::getTagGroupIdOfField($Field, $Project, $lang);
 
                     if ($tagGroupId) {
@@ -630,8 +630,8 @@ class Crons
                 $Project = QUI::getProject($projectName, $lang);
 
                 foreach ($deleteTagGroupIds as $tagGroupId) {
-                    $TagGroup       = TagGroupsHandler::get($Project, $tagGroupId);
-                    $tagGroupTags   = $TagGroup->getTags();
+                    $TagGroup = TagGroupsHandler::get($Project, $tagGroupId);
+                    $tagGroupTags = $TagGroup->getTags();
                     $deleteTagGroup = true;
 
                     // check if any tags exist in the group other than generated by this script
@@ -650,7 +650,7 @@ class Crons
 
         // Determine the tags per product
         foreach ($productIds as $productId) {
-            $Product            = Products::getProduct($productId);
+            $Product = Products::getProduct($productId);
             $tagsAddedToProduct = [];
 
             foreach ($tagsPerField as $fieldId => $tagsByLang) {
@@ -681,7 +681,7 @@ class Crons
             /** @var QUI\ERP\Products\Field\Types\AttributeGroup $AttributeGroupField */
             foreach ($Product->getFieldsByType(Fields::TYPE_ATTRIBUTE_GROUPS) as $AttributeGroupField) {
                 $productValueId = $AttributeGroupField->getValue();
-                $fieldId        = $AttributeGroupField->getId();
+                $fieldId = $AttributeGroupField->getId();
 
                 if (!isset($tagsPerAttributeGroupField[$fieldId])) {
                     continue;
@@ -722,7 +722,7 @@ class Crons
                     }
 
                     // determine tags to delete
-                    $tagGroupTags      = array_column($TagGroup->getTags(), 'tag');
+                    $tagGroupTags = array_column($TagGroup->getTags(), 'tag');
                     $deleteTags[$lang] = array_diff($tagGroupTags, $tags);
 
                     // add tags from product
@@ -757,20 +757,20 @@ class Crons
     protected static function addTagsToProject(QUI\Projects\Project $Project, array $tagEntries): array
     {
         $TagManager = new QUI\Tags\Manager($Project);
-        $tagNames   = [];
+        $tagNames = [];
 
         try {
             foreach ($tagEntries as $tagEntry) {
                 $tagTitle = $tagEntry['title'];
 
                 if ($TagManager->existsTagTitle($tagTitle)) {
-                    $tag        = $TagManager->getByTitle($tagTitle);
+                    $tag = $TagManager->getByTitle($tagTitle);
                     $tagNames[] = $tag['tag'];
                     continue;
                 }
 
                 $tagCreateData = [
-                    'title'     => $tagTitle,
+                    'title' => $tagTitle,
                     'generator' => self::TAG_GENERATOR,
                     'generated' => 1
                 ];
@@ -793,7 +793,7 @@ class Crons
     }
 
     /**
-     * @throws \QUI\Database\Exception
+     * @throws QUI\Database\Exception
      */
     protected static function getTagGroupIdOfField(
         QUI\ERP\Products\Field\Field $Field,
@@ -807,10 +807,10 @@ class Crons
             'select' => [
                 'id'
             ],
-            'from'   => QUI::getDBProjectTableName('tags_groups', $Project),
-            'where'  => [
+            'from' => QUI::getDBProjectTableName('tags_groups', $Project),
+            'where' => [
                 'workingtitle' => $Field->getWorkingTitle($L),
-                'generator'    => self::TAG_GENERATOR
+                'generator' => self::TAG_GENERATOR
             ]
         ]);
 
@@ -842,11 +842,11 @@ class Crons
             'select' => [
                 'id'
             ],
-            'from'   => QUI::getDBProjectTableName('tags_groups', $Project),
-            'where'  => [
-                'title'        => $tagGroupTitle,
+            'from' => QUI::getDBProjectTableName('tags_groups', $Project),
+            'where' => [
+                'title' => $tagGroupTitle,
                 'workingtitle' => $tagGroupWorkingTitle,
-                'generator'    => self::TAG_GENERATOR
+                'generator' => self::TAG_GENERATOR
             ]
         ]);
 
