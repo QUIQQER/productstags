@@ -314,6 +314,10 @@ class ProductEvents
         );
 
         $neededTags = array_map(function ($field) {
+            if (!$field['value']) {
+                return '';
+            }
+
             return QUI\Tags\Manager::clearTagName($field['value']);
         }, $fields);
 
