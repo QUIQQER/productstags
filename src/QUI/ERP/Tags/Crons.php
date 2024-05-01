@@ -386,6 +386,7 @@ class Crons
             }
 
             $tagsByLang = [];
+            $TagGroup = null;
 
             // generate tag group for each language and project
             foreach ($projects as $projectName) {
@@ -482,7 +483,7 @@ class Crons
                         $tagsPerField[$fieldId][$lang],
                         [
                             'project' => $Project->getName(),
-                            'tagGroupId' => $TagGroup->getId(),
+                            'tagGroupId' => $TagGroup?->getId(),
                             'tags' => $tags
                         ]
                     );
