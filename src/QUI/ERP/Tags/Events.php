@@ -23,9 +23,9 @@ class Events
 {
     /**
      * @param QUI\Package\Package $Package
-     * @throws \QUI\Exception
+     * @throws QUI\Exception
      */
-    public static function onPackageSetup(QUI\Package\Package $Package)
+    public static function onPackageSetup(QUI\Package\Package $Package): void
     {
         if ($Package->getName() === 'quiqqer/productstags') {
             self::createTagStandardField();
@@ -37,23 +37,23 @@ class Events
      *
      * @throws QUI\Exception
      */
-    protected static function createTagStandardField()
+    protected static function createTagStandardField(): void
     {
         $fieldData = [
-            'id'            => Field::FIELD_TAGS,
-            'type'          => Field::TYPE,
-            'prefix'        => '',
-            'suffix'        => '',
-            'priority'      => 13,
-            'systemField'   => 0,
+            'id' => Field::FIELD_TAGS,
+            'type' => Field::TYPE,
+            'prefix' => '',
+            'suffix' => '',
+            'priority' => 13,
+            'systemField' => 0,
             'standardField' => 1,
             'requiredField' => 0,
-            'publicField'   => 1,
-            'search_type'   => '',
-            'options'       => [
+            'publicField' => 1,
+            'search_type' => '',
+            'options' => [
                 'insert_tags' => true
             ],
-            'titles'        => [
+            'titles' => [
                 'de' => 'Tags',
                 'en' => 'Tags'
             ]
@@ -62,7 +62,7 @@ class Events
         // check if field exists
         $result = QUI::getDataBase()->fetch([
             'count' => 1,
-            'from'  => QUI\ERP\Products\Utils\Tables::getFieldTableName(),
+            'from' => QUI\ERP\Products\Utils\Tables::getFieldTableName(),
             'where' => [
                 'id' => Field::FIELD_TAGS
             ]
@@ -73,14 +73,14 @@ class Events
             QUI::getDataBase()->update(
                 QUI\ERP\Products\Utils\Tables::getFieldTableName(),
                 [
-                    'type'          => $fieldData['type'],
-                    'prefix'        => $fieldData['prefix'],
-                    'suffix'        => $fieldData['suffix'],
-                    'priority'      => $fieldData['priority'],
-                    'systemField'   => $fieldData['systemField'],
+                    'type' => $fieldData['type'],
+                    'prefix' => $fieldData['prefix'],
+                    'suffix' => $fieldData['suffix'],
+                    'priority' => $fieldData['priority'],
+                    'systemField' => $fieldData['systemField'],
                     'standardField' => $fieldData['standardField'],
-                    'search_type'   => $fieldData['search_type'],
-                    'options'       => json_encode($fieldData['options'])
+                    'search_type' => $fieldData['search_type'],
+                    'options' => json_encode($fieldData['options'])
                 ],
                 ['id' => $fieldData['id']]
             );
@@ -89,22 +89,22 @@ class Events
 
             // create / update view permission
             QUI::getPermissionManager()->addPermission([
-                'name'  => "permission.products.fields.field{$fieldData['id']}.view",
+                'name' => "permission.products.fields.field{$fieldData['id']}.view",
                 'title' => "quiqqer/products permission.products.fields.field{$fieldData['id']}.view.title",
-                'desc'  => "",
-                'type'  => 'bool',
-                'area'  => '',
-                'src'   => 'user'
+                'desc' => "",
+                'type' => 'bool',
+                'area' => '',
+                'src' => 'user'
             ]);
 
             // create / update edit permission
             QUI::getPermissionManager()->addPermission([
-                'name'  => "permission.products.fields.field{$fieldData['id']}.edit",
+                'name' => "permission.products.fields.field{$fieldData['id']}.edit",
                 'title' => "quiqqer/products permission.products.fields.field{$fieldData['id']}.edit.title",
-                'desc'  => "",
-                'type'  => 'bool',
-                'area'  => '',
-                'src'   => 'user'
+                'desc' => "",
+                'type' => 'bool',
+                'area' => '',
+                'src' => 'user'
             ]);
 
             return;

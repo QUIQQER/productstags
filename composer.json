@@ -1,5 +1,5 @@
 {
-  "name": "quiqqer\/productstags",
+  "name": "quiqqer/productstags",
   "type": "quiqqer-module",
   "description": "Implements a tag system for products and enables product search filtering by tags.",
   "license": "GPL-3.0+",
@@ -7,23 +7,23 @@
     {
       "name": "Henning Leutz",
       "email": "leutz@pcsg.de",
-      "homepage": "https:\/\/www.pcsg.de",
+      "homepage": "https://www.pcsg.de",
       "role": "Developer"
     }
   ],
   "support": {
     "email": "support@pcsg.de",
-    "url": "https:\/\/www.pcsg.de"
+    "url": "https://www.pcsg.de"
   },
   "require": {
-    "quiqqer\/quiqqer": "^1.5|*@dev",
-    "quiqqer\/bricks": "^1.2|*@dev",
-    "quiqqer\/products": "^1.2|*@dev",
-    "quiqqer\/tags": "^1.1|dev-master|dev-dev"
+    "quiqqer/core": "^2",
+    "quiqqer/bricks": "^2",
+    "quiqqer/products": "^2",
+    "quiqqer/tags": "^2"
   },
   "autoload": {
     "psr-4": {
-      "QUI\\ERP\\Tags\\": "src\/QUI\/ERP\/Tags\/"
+      "QUI\\ERP\\Tags\\": "src/QUI/ERP/Tags/"
     }
   }
 }
