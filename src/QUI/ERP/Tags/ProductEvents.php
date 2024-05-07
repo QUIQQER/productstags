@@ -6,9 +6,11 @@
 
 namespace QUI\ERP\Tags;
 
+use Exception;
 use QUI;
 use QUI\ERP\Products;
 use QUI\ERP\Products\Handler\Fields;
+use QUI\ERP\Products\Product\Model;
 
 use function array_column;
 use function array_diff;
@@ -45,8 +47,9 @@ class ProductEvents
         $productIdsQuery .= " AND `active` = 1";
 
         try {
-            Crons::generateProductAttributeListTags(array_column($productIdsQuery, 'id'));
-        } catch (\Exception $Exception) {
+            $result = QUI::getDatabase()->fetchSQL($productIdsQuery);
+            Crons::generateProductAttributeListTags(array_column($result, 'id'));
+        } catch (Exception $Exception) {
             QUI\System\Log::writeException($Exception);
         }
     }
@@ -59,9 +62,9 @@ class ProductEvents
     public static function onProductSave(
         Products\Product\Model $Product,
         bool $generateAttributeListTags = true
-    ) {
-        $tagFields   = $Product->getFieldsByType(Field::TYPE);
-        $pId         = $Product->getId();
+    ): void {
+        $tagFields = $Product->getFieldsByType(Field::TYPE);
+        $pId = $Product->getId();
         $productTags = [];
 
         /** @var Field $Field */
@@ -79,16 +82,16 @@ class ProductEvents
 
         // update products to tags
         $Project = QUI::getProjectManager()->getStandard();
-        $DB      = QUI::getDataBase();
+        $DB = QUI::getDataBase();
 
         foreach ($productTags as $lang => $langTags) {
-            $LangProject      = QUI::getProject($Project->getName(), $lang);
+            $LangProject = QUI::getProject($Project->getName(), $lang);
             $tblProducts2Tags = QUI::getDBProjectTableName(Crons::TBL_PRODUCTS_2_TAGS, $LangProject);
 
             // check if entry exists
             $result = $DB->fetch([
                 'count' => 1,
-                'from'  => $tblProducts2Tags,
+                'from' => $tblProducts2Tags,
                 'where' => [
                     'id' => $pId
                 ]
@@ -122,7 +125,7 @@ class ProductEvents
                 $DB->insert(
                     $tblProducts2Tags,
                     [
-                        'id'   => $pId,
+                        'id' => $pId,
                         'tags' => ',' . implode(',', $langTags) . ','
                     ]
                 );
@@ -146,7 +149,7 @@ class ProductEvents
                     'tags' => ',' . implode(',', $langTags) . ','
                 ],
                 [
-                    'id'   => $Product->getId(),
+                    'id' => $Product->getId(),
                     'lang' => $lang
                 ]
             );
@@ -154,7 +157,7 @@ class ProductEvents
 
         // update tags to products
         foreach ($productTags as $lang => $langTags) {
-            $LangProject      = QUI::getProject($Project->getName(), $lang);
+            $LangProject = QUI::getProject($Project->getName(), $lang);
             $tblTags2Products = QUI::getDBProjectTableName(Crons::TBL_TAGS_2_PRODUCTS, $LangProject);
 
             $insertTagsDB = [];
@@ -170,10 +173,10 @@ class ProductEvents
                     'tag',
                     'productIds'
                 ],
-                'from'   => $tblTags2Products,
-                'where'  => [
+                'from' => $tblTags2Products,
+                'where' => [
                     'productIds' => [
-                        'type'  => '%LIKE%',
+                        'type' => '%LIKE%',
                         'value' => ',' . $pId . ','
                     ]
                 ]
@@ -213,7 +216,7 @@ class ProductEvents
                     $tblTags2Products,
                     [
                         'tag' => [
-                            'type'  => 'IN',
+                            'type' => 'IN',
                             'value' => $deleteTagsDB
                         ]
                     ]
@@ -232,10 +235,10 @@ class ProductEvents
                         'tag',
                         'productIds'
                     ],
-                    'from'   => $tblTags2Products,
-                    'where'  => [
+                    'from' => $tblTags2Products,
+                    'where' => [
                         'tag' => [
-                            'type'  => 'IN',
+                            'type' => 'IN',
                             'value' => $newTags
                         ]
                     ]
@@ -253,7 +256,7 @@ class ProductEvents
             foreach ($newTags as $tag) {
                 if (isset($tags2OtherProductIds[$tag])) {
                     $tags2OtherProductIds[$tag][] = $pId;
-                    $updateTagsDB[$tag]           = $tags2OtherProductIds[$tag];
+                    $updateTagsDB[$tag] = $tags2OtherProductIds[$tag];
 
                     continue;
                 }
@@ -267,11 +270,11 @@ class ProductEvents
                     $DB->insert(
                         $tblTags2Products,
                         [
-                            'tag'        => $tag,
+                            'tag' => $tag,
                             'productIds' => ',' . implode(',', $productIds) . ','
                         ]
                     );
-                } catch (QUI\Exception $Exception) {
+                } catch (QUI\Exception) {
                 }
             }
 
@@ -292,11 +295,13 @@ class ProductEvents
 
     /**
      * @param array $fieldData
-     * @param \QUI\ERP\Products\Product\Model $Product
+     * @param Model $Product
      * @return void
-     * @throws \QUI\ERP\Products\Field\Exception
+     * @throws Products\Field\Exception
+     * @throws Products\Product\Exception
+     * @throws QUI\Exception
      */
-    public static function onProductSaveBefore(array &$fieldData, Products\Product\Model $Product)
+    public static function onProductSaveBefore(array &$fieldData, Products\Product\Model $Product): void
     {
         $fields = array_filter($fieldData, function ($field) {
             return $field['type'] === Fields::TYPE_ATTRIBUTE_GROUPS || $field['type'] === Fields::TYPE_ATTRIBUTE_LIST;
@@ -309,6 +314,10 @@ class ProductEvents
         );
 
         $neededTags = array_map(function ($field) {
+            if (!$field['value']) {
+                return '';
+            }
+
             return QUI\Tags\Manager::clearTagName($field['value']);
         }, $fields);
 
@@ -338,9 +347,9 @@ class ProductEvents
         // add tags
         foreach ($fields as $fieldDateEntry) {
             $fieldId = $fieldDateEntry['id'];
-            $Field   = Fields::getField($fieldId);
+            $Field = Fields::getField($fieldId);
 
-            $options      = $Field->getOptions();
+            $options = $Field->getOptions();
             $generateTags = !empty($options['generate_tags']);
 
             if (!$generateTags) {
@@ -356,7 +365,7 @@ class ProductEvents
                 foreach ($neededTags as $tag) {
                     if (!$tagInArray($tag, $entry)) {
                         $fieldData[$tagFieldKey]['value'][$lang][] = [
-                            'tag'       => $tag,
+                            'tag' => $tag,
                             'generator' => 'quiqqer/productstags'
                         ];
                     }

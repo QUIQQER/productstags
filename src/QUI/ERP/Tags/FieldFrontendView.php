@@ -23,7 +23,7 @@ class FieldFrontendView extends QUI\ERP\Products\Field\View
      *
      * @return string
      */
-    public function create()
+    public function create(): string
     {
         if (!$this->hasViewPermission()) {
             return '';
@@ -41,7 +41,7 @@ class FieldFrontendView extends QUI\ERP\Products\Field\View
             foreach ($value[$lang] as $tag) {
                 try {
                     $tagData = $TagManager->get($tag['tag']);
-                } catch (QUI\Exception $Exception) {
+                } catch (QUI\Exception) {
                     continue;
                 }
 
