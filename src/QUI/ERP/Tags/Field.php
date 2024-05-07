@@ -8,6 +8,16 @@ namespace QUI\ERP\Tags;
 
 use QUI;
 use QUI\ERP\Products;
+use QUI\ERP\Products\Field\Exception;
+use QUI\ERP\Products\Field\View;
+
+use function array_merge;
+use function implode;
+use function is_array;
+use function is_null;
+use function is_string;
+use function json_decode;
+use function json_last_error;
 
 /**
  * Class Field
@@ -30,22 +40,22 @@ class Field extends Products\Field\Field
     /**
      * @var bool
      */
-    public $searchable = true;
+    public bool $searchable = true;
 
     /**
      * Tag Manager instanced by language
      *
      * @var array
      */
-    protected $tagManagers = [];
+    protected array $tagManagers = [];
 
     /**
      * These options must be part of a field value
      *
      * @var array
      */
-    protected $valueOptions = [
-        'tag'       => true,
+    protected array $valueOptions = [
+        'tag' => true,
         'generator' => true
     ];
 
@@ -54,20 +64,21 @@ class Field extends Products\Field\Field
      *
      * @param mixed $value
      * @return array
+     * @throws QUI\Exception
      */
-    public function cleanup($value)
+    public function cleanup(mixed $value): array
     {
-        if (\is_string($value)) {
-            $value = \json_decode($value, true);
+        if (is_string($value)) {
+            $value = json_decode($value, true);
         }
 
-        if (!\is_array($value)) {
+        if (!is_array($value)) {
             return [];
         }
 
-        $Project   = QUI::getProjectManager()->getStandard();
+        $Project = QUI::getProjectManager()->getStandard();
         $languages = $Project->getLanguages();
-        $result    = [];
+        $result = [];
 
         foreach ($languages as $lang) {
             if (!isset($value[$lang])) {
@@ -77,14 +88,14 @@ class Field extends Products\Field\Field
 
             $tags = $value[$lang];
 
-            if (!\is_array($tags)) {
+            if (!is_array($tags)) {
                 $result[$lang] = [];
                 continue;
             }
 
             $TagManager = $this->getTagManager($lang);
-            $tagresult  = [];
-            $addedTags  = [];
+            $tagresult = [];
+            $addedTags = [];
 
             foreach ($tags as $tagData) {
                 foreach ($this->valueOptions as $option => $v) {
@@ -109,7 +120,7 @@ class Field extends Products\Field\Field
                     $resultTagData[$option] = $tagData[$option];
                 }
 
-                $tagresult[]     = $resultTagData;
+                $tagresult[] = $resultTagData;
                 $addedTags[$tag] = true; // cache added tags to prevent duplicates
             }
 
@@ -124,39 +135,39 @@ class Field extends Products\Field\Field
      * is the value valid for the field type?
      *
      * @param mixed $value
-     * @throws \QUI\ERP\Products\Field\Exception
+     * @throws Exception
      */
-    public function validate($value)
+    public function validate(mixed $value): void
     {
         if (empty($value)) {
             return;
         }
 
-        if (!\is_string($value) && !\is_array($value)) {
-            if (\json_last_error() !== JSON_ERROR_NONE) {
-                throw new Products\Field\Exception([
+        if (!is_string($value) && !is_array($value)) {
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception([
                     'quiqqer/products',
                     'exception.field.invalid',
                     [
-                        'fieldId'    => $this->getId(),
+                        'fieldId' => $this->getId(),
                         'fieldTitle' => $this->getTitle(),
-                        'fieldType'  => $this->getType()
+                        'fieldType' => $this->getType()
                     ]
                 ]);
             }
         }
 
-        if (\is_string($value)) {
-            \json_decode($value, true);
+        if (is_string($value)) {
+            json_decode($value, true);
 
-            if (\json_last_error() !== JSON_ERROR_NONE) {
-                throw new Products\Field\Exception([
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception([
                     'quiqqer/products',
                     'exception.field.invalid',
                     [
-                        'fieldId'    => $this->getId(),
+                        'fieldId' => $this->getId(),
                         'fieldTitle' => $this->getTitle(),
-                        'fieldType'  => $this->getType()
+                        'fieldType' => $this->getType()
                     ]
                 ]);
             }
@@ -171,8 +182,9 @@ class Field extends Products\Field\Field
      * @param string $generator (optional) - the entitiy who created the tag [default: "user"];
      *                                       can be package name for example
      * @return bool - success
+     * @throws QUI\Exception
      */
-    public function addTag($tag, $lang, $generator = 'user')
+    public function addTag(string $tag, string $lang, string $generator = 'user'): bool
     {
         $tags = $this->getTags();
 
@@ -181,7 +193,7 @@ class Field extends Products\Field\Field
         }
 
         $tags[$lang][] = [
-            'tag'       => $tag,
+            'tag' => $tag,
             'generator' => $generator
         ];
 
@@ -198,8 +210,9 @@ class Field extends Products\Field\Field
      * @param string $generator (optional) - the entitiy who created the tags [default: "user"];
      *                                       can be package name for example
      * @return bool - success
+     * @throws QUI\Exception
      */
-    public function addTags($tags, $lang, $generator = 'user')
+    public function addTags(array $tags, string $lang, string $generator = 'user'): bool
     {
         $fieldTags = $this->getTags();
 
@@ -211,12 +224,12 @@ class Field extends Products\Field\Field
 
         foreach ($tags as $tag) {
             $newTags[] = [
-                'tag'       => $tag,
+                'tag' => $tag,
                 'generator' => $generator
             ];
         }
 
-        $fieldTags[$lang] = \array_merge($fieldTags[$lang], $newTags);
+        $fieldTags[$lang] = array_merge($fieldTags[$lang], $newTags);
 
         $this->setValue($fieldTags);
 
@@ -227,12 +240,13 @@ class Field extends Products\Field\Field
      * Remove tags of specific language
      *
      * @param string $lang
-     * @param string $generator (optional) - remove only tags from entitiy who created the tags [default: "user"];
+     * @param string|null $generator (optional) - remove only tags from entity who created the tags [default: "user"];
      * can be package name for example
      *
      * @return bool - success
+     * @throws QUI\Exception
      */
-    public function removeTags($lang, $generator = null)
+    public function removeTags(string $lang, string $generator = null): bool
     {
         $tags = $this->getTags();
 
@@ -264,8 +278,9 @@ class Field extends Products\Field\Field
      * @param string $tag
      * @param string $lang
      * @return bool - success
+     * @throws QUI\Exception
      */
-    public function removeTag($tag, $lang)
+    public function removeTag(string $tag, string $lang): bool
     {
         $tags = $this->getTags();
 
@@ -290,10 +305,10 @@ class Field extends Products\Field\Field
     /**
      * Get all tags that are assigned to this field
      *
-     * @param string $generator (optional) - get tags generated by specific generator
+     * @param string|null $generator (optional) - get tags generated by specific generator
      * @return array - array with tag data (tag name and generator)
      */
-    public function getTags($generator = null)
+    public function getTags(string $generator = null): array
     {
         $val = $this->getValue();
 
@@ -301,8 +316,8 @@ class Field extends Products\Field\Field
             $val = [];
         }
 
-        if (!\is_array($val)) {
-            $val = \json_decode($val, true);
+        if (!is_array($val)) {
+            $val = json_decode($val, true);
         }
 
         $tags = [];
@@ -313,7 +328,7 @@ class Field extends Products\Field\Field
             }
 
             foreach ($langTags as $tagData) {
-                if (!\is_null($generator)) {
+                if (!is_null($generator)) {
                     if ($tagData['generator'] != $generator) {
                         continue;
                     }
@@ -329,10 +344,10 @@ class Field extends Products\Field\Field
     /**
      * Get all tags that are assigned to this field
      *
-     * @param string $generator (optional) - get tags generated by specific generator
+     * @param string|null $generator (optional) - get tags generated by specific generator
      * @return array - array with tags only
      */
-    public function getTagList($generator = null)
+    public function getTagList(string $generator = null): array
     {
         $val = $this->getValue();
 
@@ -340,8 +355,8 @@ class Field extends Products\Field\Field
             $val = [];
         }
 
-        if (!\is_array($val)) {
-            $val = \json_decode($val, true);
+        if (!is_array($val)) {
+            $val = json_decode($val, true);
         }
 
         $tags = [];
@@ -352,7 +367,7 @@ class Field extends Products\Field\Field
             }
 
             foreach ($langTags as $tagData) {
-                if (!\is_null($generator)) {
+                if (!is_null($generator)) {
                     if ($tagData['generator'] != $generator) {
                         continue;
                     }
@@ -368,7 +383,7 @@ class Field extends Products\Field\Field
     /**
      * @return string
      */
-    public function getJavaScriptControl()
+    public function getJavaScriptControl(): string
     {
         return 'package/quiqqer/productstags/bin/controls/FieldSettings';
     }
@@ -376,7 +391,7 @@ class Field extends Products\Field\Field
     /**
      * @return string
      */
-    public function getJavaScriptSettings()
+    public function getJavaScriptSettings(): string
     {
         return 'package/quiqqer/productstags/bin/controls/TagSettings';
     }
@@ -388,7 +403,7 @@ class Field extends Products\Field\Field
      * @return QUI\Tags\Manager
      * @throws QUI\Exception
      */
-    protected function getTagManager($lang)
+    protected function getTagManager(string $lang): QUI\Tags\Manager
     {
         if (isset($this->tagManagers[$lang])) {
             return $this->tagManagers[$lang];
@@ -397,7 +412,7 @@ class Field extends Products\Field\Field
         $Project = QUI::getProjectManager()->getStandard();
         $Project = QUI::getProjectManager()->getProject($Project->getName(), $lang);
 
-        $TagManager               = new QUI\Tags\Manager($Project);
+        $TagManager = new QUI\Tags\Manager($Project);
         $this->tagManagers[$lang] = $TagManager;
 
         return $TagManager;
@@ -406,9 +421,9 @@ class Field extends Products\Field\Field
     /**
      * Return the view
      *
-     * @return \QUI\ERP\Products\Field\View
+     * @return View
      */
-    public function getFrontendView()
+    public function getFrontendView(): View
     {
         return new FieldFrontendView($this->getFieldDataForView());
     }
@@ -416,10 +431,10 @@ class Field extends Products\Field\Field
     /**
      * Return value for use in product search cache
      *
-     * @param QUI\Locale|null $Locale
-     * @return string
+     * @param null $Locale
+     * @return string|null
      */
-    public function getSearchCacheValue($Locale = null)
+    public function getSearchCacheValue($Locale = null): ?string
     {
         $val = $this->getValue();
 
@@ -439,7 +454,7 @@ class Field extends Products\Field\Field
 
             foreach ($langTags as $tagData) {
                 try {
-                    $tagResult           = $TagManager->get($tagData['tag']);
+                    $tagResult = $TagManager->get($tagData['tag']);
                     $searchCacheValues[] = $tagResult['title'];
                 } catch (\Exception $Exception) {
                     QUI\System\Log::writeDebugException($Exception);
@@ -447,35 +462,6 @@ class Field extends Products\Field\Field
             }
         }
 
-        return ',' . \implode(',', $searchCacheValues) . ',';
+        return ',' . implode(',', $searchCacheValues) . ',';
     }
-
-
-
-//    /**
-//     * Return the field data for a view
-//     *
-//     * @return array
-//     */
-//    protected function getFieldDataForView()
-//    {
-//        $attributes = $this->getAttributes();
-//
-//        $tags     = $this->getValue();
-//        $viewTags = array();
-//
-//        foreach ($tags as $lang => $langTags) {
-//            if (!isset($viewTags[$lang])) {
-//                $viewTags[$lang] = array();
-//            }
-//
-//            foreach ($langTags as $tagData) {
-//                $viewTags[$lang][] = $tagData['tag'];
-//            }
-//        }
-//
-//        $attributes['value'] = $viewTags;
-//
-//        return $attributes;
-//    }
 }

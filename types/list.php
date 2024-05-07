@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * This file contains the list site type
+ *
+ * @var QUI\Projects\Project $Project
+ * @var QUI\Projects\Site $Site
+ * @var QUI\Interfaces\Template\EngineInterface $Engine
+ * @var QUI\Template $Template
+ **/
+
 use QUI\ERP\Products\Controls\Category\ProductList;
 
 $tags = $Site->getAttribute('quiqqer.productstags.tags');
