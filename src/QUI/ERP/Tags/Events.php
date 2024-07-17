@@ -59,17 +59,23 @@ class Events
             ]
         ];
 
-        // check if field exists
-        $result = QUI::getDataBase()->fetch([
-            'count' => 1,
-            'from'  => QUI\ERP\Products\Utils\Tables::getFieldTableName(),
-            'where' => [
-                'id' => Field::FIELD_TAGS
-            ]
-        ]);
+        try {
+            // check if field exists
+            $result = QUI::getDataBase()->fetch([
+                'count' => 1,
+                'from'  => QUI\ERP\Products\Utils\Tables::getFieldTableName(),
+                'where' => [
+                    'id' => Field::FIELD_TAGS
+                ]
+            ]);
 
-        // if field exists -> update
-        if (current(current($result)) > 0) {
+            $isFieldAlreadyExisting = current(current($result)) > 0;
+        } catch (QUI\Database\Exception) {
+            // The table may not exist yet, or throw any other error
+            $isFieldAlreadyExisting = false;
+        }
+
+        if ($isFieldAlreadyExisting) {
             QUI::getDataBase()->update(
                 QUI\ERP\Products\Utils\Tables::getFieldTableName(),
                 [
