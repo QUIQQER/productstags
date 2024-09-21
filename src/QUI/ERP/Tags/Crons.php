@@ -647,7 +647,12 @@ class Crons
                 $Project = QUI::getProject($projectName, $lang);
 
                 foreach ($deleteTagGroupIds as $tagGroupId) {
-                    $TagGroup = TagGroupsHandler::get($Project, $tagGroupId);
+                    try {
+                        $TagGroup = TagGroupsHandler::get($Project, $tagGroupId);
+                    } catch (QUI\Exception) {
+                        continue;
+                    }
+
                     $tagGroupTags = $TagGroup->getTags();
                     $deleteTagGroup = true;
 
@@ -727,10 +732,23 @@ class Crons
                 $deleteTags = [];
 
                 foreach ($tagsAddedToProduct as $lang => $entry) {
-                    $TagGroup = TagGroupsHandler::get(
-                        new QUI\Projects\Project($entry['project'], $lang),
-                        $entry['tagGroupId']
-                    );
+                    try {
+                        $TagGroup = TagGroupsHandler::get(
+                            new QUI\Projects\Project($entry['project'], $lang),
+                            $entry['tagGroupId']
+                        );
+                    } catch (QUI\Exception $exception) {
+                        QUI\System\Log::addError(
+                            $exception->getMessage(),
+                            [
+                                'project' => $entry['project'],
+                                'lang' => $lang,
+                                'tagGroupId' => $entry['tagGroupId'],
+                                'entry' => $entry
+                            ]
+                        );
+                        continue;
+                    }
 
                     $tags = $entry['tags'];
 
