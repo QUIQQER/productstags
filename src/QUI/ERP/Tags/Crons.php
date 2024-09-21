@@ -233,6 +233,11 @@ class Crons
      * and assigns them to projects, products and product category sites
      *
      * @param array $productIds (optional) - Fixed list of product ids
+     * @throws QUI\Database\Exception
+     * @throws QUI\ERP\Products\Field\Exception
+     * @throws QUI\ERP\Products\Product\Exception
+     * @throws QUI\Exception
+     * @throws QUI\Tags\Exception
      */
     public static function generateProductAttributeListTags(array $productIds = []): void
     {
