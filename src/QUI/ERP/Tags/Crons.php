@@ -233,7 +233,11 @@ class Crons
      * and assigns them to projects, products and product category sites
      *
      * @param array $productIds (optional) - Fixed list of product ids
+     * @throws QUI\Database\Exception
+     * @throws QUI\ERP\Products\Field\Exception
+     * @throws QUI\ERP\Products\Product\Exception
      * @throws QUI\Exception
+     * @throws QUI\Tags\Exception
      */
     public static function generateProductAttributeListTags(array $productIds = []): void
     {
@@ -402,11 +406,23 @@ class Crons
                         $fieldTagGroups[$l] = [];
                     }
 
-                    $TagGroup = self::addTagGroupToProject(
-                        $Project,
-                        $Field->getTitle($Locale),
-                        $Field->getWorkingTitle($Locale)
-                    );
+                    try {
+                        $TagGroup = self::addTagGroupToProject(
+                            $Project,
+                            $Field->getTitle($Locale),
+                            $Field->getWorkingTitle($Locale)
+                        );
+                    } catch (QUI\Exception $exception) {
+                        QUI\System\Log::addError(
+                            $exception->getMessage(),
+                            [
+                                'field' => $Field->getTitle(),
+                                'field-id' => $Field->getId()
+                            ]
+                        );
+
+                        continue;
+                    }
 
                     $tagsGroupIdsNew[$l][$Project->getName()][] = $TagGroup->getId();
 
