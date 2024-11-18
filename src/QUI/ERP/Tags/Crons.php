@@ -101,7 +101,9 @@ class Crons
      */
     public static function createSitesToProductTagsCache(): void
     {
-        QUI\Watcher::$globalWatcherDisable = true;
+        if (class_exists('\\QUI\\Watcher')) {
+            QUI\Watcher::$globalWatcherDisable = true;
+        }
 
         $Project = QUI::getProjectManager()->getStandard();
         $langs = $Project->getLanguages();
