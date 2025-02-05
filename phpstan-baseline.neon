@@ -1,0 +1,16 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Parameter \\#1 \\$seconds of function set_time_limit expects int, string given\\.$#"
+			count: 1
+			path: src/QUI/ERP/Tags/Crons.php
+
+		-
+			message: "#^Variable \\$Category in PHPDoc tag @var does not match any variable in the foreach loop\\: \\$categoryIds, \\$categoryId$#"
+			count: 1
+			path: src/QUI/ERP/Tags/Crons.php
+
+		-
+			message: "#^Variable \\$TagGroup in PHPDoc tag @var does not match any variable in the foreach loop\\: \\$tagGroups, \\$TagGroupInstance$#"
+			count: 1
+			path: src/QUI/ERP/Tags/Crons.php

@@ -101,7 +101,9 @@ class Crons
      */
     public static function createSitesToProductTagsCache(): void
     {
-        QUI\Watcher::$globalWatcherDisable = true;
+        if (class_exists('\\QUI\\Watcher')) {
+            QUI\Watcher::$globalWatcherDisable = true;
+        }
 
         $Project = QUI::getProjectManager()->getStandard();
         $langs = $Project->getLanguages();
@@ -233,7 +235,11 @@ class Crons
      * and assigns them to projects, products and product category sites
      *
      * @param array $productIds (optional) - Fixed list of product ids
+     * @throws QUI\Database\Exception
+     * @throws QUI\ERP\Products\Field\Exception
+     * @throws QUI\ERP\Products\Product\Exception
      * @throws QUI\Exception
+     * @throws QUI\Tags\Exception
      */
     public static function generateProductAttributeListTags(array $productIds = []): void
     {
@@ -402,11 +408,23 @@ class Crons
                         $fieldTagGroups[$l] = [];
                     }
 
-                    $TagGroup = self::addTagGroupToProject(
-                        $Project,
-                        $Field->getTitle($Locale),
-                        $Field->getWorkingTitle($Locale)
-                    );
+                    try {
+                        $TagGroup = self::addTagGroupToProject(
+                            $Project,
+                            $Field->getTitle($Locale),
+                            $Field->getWorkingTitle($Locale)
+                        );
+                    } catch (QUI\Exception $exception) {
+                        QUI\System\Log::addError(
+                            $exception->getMessage(),
+                            [
+                                'field' => $Field->getTitle(),
+                                'field-id' => $Field->getId()
+                            ]
+                        );
+
+                        continue;
+                    }
 
                     $tagsGroupIdsNew[$l][$Project->getName()][] = $TagGroup->getId();
 
@@ -631,7 +649,12 @@ class Crons
                 $Project = QUI::getProject($projectName, $lang);
 
                 foreach ($deleteTagGroupIds as $tagGroupId) {
-                    $TagGroup = TagGroupsHandler::get($Project, $tagGroupId);
+                    try {
+                        $TagGroup = TagGroupsHandler::get($Project, $tagGroupId);
+                    } catch (QUI\Exception) {
+                        continue;
+                    }
+
                     $tagGroupTags = $TagGroup->getTags();
                     $deleteTagGroup = true;
 
@@ -711,10 +734,23 @@ class Crons
                 $deleteTags = [];
 
                 foreach ($tagsAddedToProduct as $lang => $entry) {
-                    $TagGroup = TagGroupsHandler::get(
-                        new QUI\Projects\Project($entry['project'], $lang),
-                        $entry['tagGroupId']
-                    );
+                    try {
+                        $TagGroup = TagGroupsHandler::get(
+                            new QUI\Projects\Project($entry['project'], $lang),
+                            $entry['tagGroupId']
+                        );
+                    } catch (QUI\Exception $exception) {
+                        QUI\System\Log::addError(
+                            $exception->getMessage(),
+                            [
+                                'project' => $entry['project'],
+                                'lang' => $lang,
+                                'tagGroupId' => $entry['tagGroupId'],
+                                'entry' => $entry
+                            ]
+                        );
+                        continue;
+                    }
 
                     $tags = $entry['tags'];
 
