@@ -311,7 +311,7 @@ class Crons
         $Locale = new QUI\Locale();
 
         // reset time limit
-        set_time_limit(ini_get('max_execution_time'));
+        set_time_limit((int)ini_get('max_execution_time'));
 
         $tagsPerField = []; // only applied when parsing $Field of type AttributeGroup
         $tagsPerAttributeGroupField = [];
@@ -467,7 +467,6 @@ class Crons
                 $tagGroups = $fieldTagGroups[$lang];
                 $tagGroupIds = [];
 
-                /** @var QUI\Tags\Groups\Group $TagGroup */
                 foreach ($tagGroups as $TagGroupInstance) {
                     $tagGroupIds[] = $TagGroupInstance->getId();
                 }
@@ -511,7 +510,6 @@ class Crons
                     // Assign tag group based on field to all relevant category Sites.
                     // But ONLY if the field is not already a default search filter field.
                     if (!in_array($fieldId, $defaultSearchFilterFieldIds)) {
-                        /** @var QUI\ERP\Products\Category\Category $Category */
                         foreach ($categoryIds as $categoryId) {
                             $Category = Categories::getCategory($categoryId);
 
