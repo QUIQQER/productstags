@@ -66,7 +66,7 @@ class Manager
      * @return array
      * @throws Exception
      */
-    public function getProductIdsFromTags(array $tags, string $lang, int $limit = null): array
+    public function getProductIdsFromTags(array $tags, string $lang, null | int $limit = null): array
     {
         $ids = [];
         $Project = QUI::getProjectManager()->getStandard();
@@ -106,7 +106,7 @@ class Manager
      * @return array
      * @throws Exception
      */
-    public function getProductsFromTags(array $tags, string $lang, int $limit = null): array
+    public function getProductsFromTags(array $tags, string $lang, null | int $limit = null): array
     {
         $products = [];
         $productIds = $this->getProductIdsFromTags($tags, $lang, $limit);
@@ -135,7 +135,7 @@ class Manager
     public function getTagsFromProduct(
         QUI\ERP\Products\Product\Product $Product,
         string $lang,
-        int $limit = null
+        null | int $limit = null
     ): array {
         $Project = QUI::getProjectManager()->getStandard();
         $Project = QUI::getProject($Project->getName(), $lang);
